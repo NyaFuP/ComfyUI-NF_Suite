@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "fantasy_01",
+      "name": "Fantasy Scene",
+      "category": "Scene",
+      "template": "{quality}, {character}, {location}, {lighting}",
+      "negative_prompt": "low quality, blurry",
+      "variables": {
+        "quality": "masterpiece, high quality",
+        "character": "",
+        "location": "",
+        "lighting": "cinematic lighting"
+      }
+    }
+  ]
+}

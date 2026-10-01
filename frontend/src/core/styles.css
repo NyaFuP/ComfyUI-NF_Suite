@@ -1,0 +1,683 @@
+/*
+ * NF_Suite styles for unstyled PrimeVue + our components.
+ * Colors come from ComfyUI's CSS variables (not a guaranteed contract, see CLAUDE.md),
+ * always with a fallback so the UI stays usable if a variable disappears.
+ */
+:root {
+  --nf-bg: var(--comfy-input-bg, #222);
+  --nf-fg: var(--input-text, var(--fg-color, #ddd));
+  --nf-muted: var(--descrip-text, #999);
+  --nf-border: var(--border-color, #4e4e4e);
+  --nf-panel: var(--comfy-menu-bg, #353535);
+  --nf-accent: var(--p-primary-color, #4a8af4);
+  --nf-hover: var(--p-content-hover-background, rgba(255, 255, 255, 0.08));
+  --nf-warn: var(--p-orange-400, #f0a040);
+  --nf-error: var(--error-text, #ff6b6b);
+  --nf-radius: 6px;
+  --nf-font-size: 12px;
+}
+
+.nf-widget-container {
+  width: 100%;
+}
+
+.nf-root {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 2px 0;
+  font-size: var(--nf-font-size);
+  color: var(--nf-fg);
+}
+
+.nf-root *,
+.nf-overlay * {
+  box-sizing: border-box;
+}
+
+.nf-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nf-grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* --- inputs ------------------------------------------------------------ */
+
+.nf-input {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius);
+  background: var(--nf-bg);
+  color: var(--nf-fg);
+  font: inherit;
+  outline: none;
+}
+
+.nf-input:focus {
+  border-color: var(--nf-accent);
+}
+
+.nf-textarea {
+  /* autoResize sets height = scrollHeight; with border-box that leaves 1-2px of overflow */
+  overflow: hidden;
+  resize: none;
+  line-height: 1.4;
+  min-height: 24px;
+}
+
+/* --- buttons ----------------------------------------------------------- */
+
+.nf-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius);
+  background: var(--nf-panel);
+  color: var(--nf-fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.nf-button:hover:not(:disabled) {
+  background: var(--nf-hover);
+}
+
+.nf-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.nf-icon-button {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+}
+
+/* --- select ------------------------------------------------------------ */
+
+.nf-select {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius);
+  background: var(--nf-bg);
+  color: var(--nf-fg);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.nf-select[data-p-focus='true'] {
+  border-color: var(--nf-accent);
+}
+
+.nf-select-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  outline: none;
+}
+
+.nf-select-label[data-p='placeholder'],
+.nf-select-label.p-placeholder {
+  color: var(--nf-muted);
+}
+
+.nf-select-dropdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  color: var(--nf-muted);
+}
+
+.nf-overlay {
+  min-width: 200px;
+  max-width: 480px;
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius);
+  background: var(--nf-panel);
+  color: var(--nf-fg);
+  font-size: var(--nf-font-size);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.nf-overlay-header {
+  padding: 6px;
+  border-bottom: 1px solid var(--nf-border);
+}
+
+.nf-overlay-list-container {
+  max-height: 320px;
+  overflow: auto;
+}
+
+.nf-overlay-list {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+}
+
+.nf-overlay-group {
+  padding: 6px 10px 2px;
+  color: var(--nf-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: default;
+}
+
+.nf-overlay-option {
+  padding: 5px 10px 5px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nf-overlay-option[data-p-focused='true'],
+.nf-overlay-option:hover {
+  background: var(--nf-hover);
+}
+
+.nf-overlay-option[data-p-selected='true'] {
+  color: var(--nf-accent);
+  font-weight: 600;
+}
+
+.nf-overlay-empty {
+  padding: 6px 10px;
+  color: var(--nf-muted);
+}
+
+/* PrimeVue's visually-hidden helpers (normally provided by its base styles) */
+.nf-root [data-p-hidden-accessible='true'],
+.nf-overlay [data-p-hidden-accessible='true'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+}
+
+/* --- prompt template node ---------------------------------------------- */
+
+.nf-notice {
+  padding: 3px 6px;
+  border-left: 3px solid var(--nf-muted);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.15);
+  color: var(--nf-fg);
+}
+
+.nf-notice[data-level='warn'] {
+  border-left-color: var(--nf-warn);
+}
+
+.nf-notice[data-level='error'] {
+  border-left-color: var(--nf-error);
+  color: var(--nf-error);
+}
+
+.nf-notice[data-level='info'] {
+  border-left-color: var(--nf-accent);
+}
+
+.nf-vars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nf-var {
+  display: grid;
+  grid-template-columns: minmax(60px, 30%) 1fr auto;
+  align-items: start;
+  gap: 4px;
+}
+
+.nf-var-label {
+  padding-top: 5px;
+  overflow: hidden;
+  color: var(--nf-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.nf-var .nf-icon-button {
+  width: 24px;
+  height: 24px;
+}
+
+.nf-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nf-preview-label {
+  color: var(--nf-muted);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.nf-preview-text {
+  margin: 0;
+  max-height: 120px;
+  padding: 4px 6px;
+  overflow: auto;
+  border-radius: var(--nf-radius);
+  background: rgba(0, 0, 0, 0.2);
+  font: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.nf-preview-negative {
+  color: var(--nf-muted);
+}
+
+.nf-warnings {
+  margin: 2px 0 0;
+  padding-left: 16px;
+  color: var(--nf-warn);
+}
+
+.nf-muted {
+  margin: 0;
+  color: var(--nf-muted);
+}
+
+.nf-small {
+  font-size: 11px;
+}
+
+.nf-pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.nf-notice[data-level='muted'] {
+  color: var(--nf-muted);
+}
+
+/* --- independent queue ------------------------------------------------- */
+
+.nf-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.nf-progress-bar {
+  height: 100%;
+  background: var(--nf-accent);
+  transition: width 0.2s;
+}
+
+.nf-iq-result {
+  max-height: 240px;
+}
+
+/* --- preview selector -------------------------------------------------- */
+
+.nf-ps-container {
+  height: 100%;
+}
+
+.nf-ps {
+  container-type: inline-size;
+  height: 100%;
+  min-height: 0;
+}
+
+/* The gallery area gets its size from the node; the absolutely positioned grid
+   inside never contributes to that size (node size first). */
+.nf-ps-area {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--nf-radius);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.nf-ps-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+}
+
+.nf-ps-cell {
+  position: relative;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.nf-ps-cell:disabled {
+  cursor: default;
+}
+
+.nf-ps-cell img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.nf-ps-cell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.nf-ps-cell:hover:not(:disabled)::after {
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.nf-ps-cell.selected::after {
+  box-shadow: inset 0 0 0 3px var(--nf-select, #32cd32);
+}
+
+.nf-ps-badge {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 10px;
+  line-height: 16px;
+  pointer-events: none;
+}
+
+.nf-ps-cell.selected .nf-ps-badge {
+  background: var(--nf-select, #32cd32);
+  color: #000;
+}
+
+.nf-ps-bar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+}
+
+.nf-ps-status {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--nf-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.nf-ps-status[data-level='error'] {
+  color: var(--nf-error);
+}
+
+.nf-ps-status[data-level='warn'] {
+  color: var(--nf-warn);
+}
+
+.nf-ps-status[data-level='info'] {
+  color: var(--nf-fg);
+}
+
+/* Narrow node: status on its own line above the buttons. */
+@container (max-width: 380px) {
+  .nf-ps-bar {
+    flex-wrap: wrap;
+  }
+
+  .nf-ps-status {
+    flex-basis: 100%;
+  }
+}
+
+.nf-errors {
+  margin: 0;
+  padding-left: 16px;
+  color: var(--nf-error);
+}
+
+.nf-input[aria-invalid='true'],
+.nf-input[data-p-invalid='true'] {
+  border-color: var(--nf-error);
+}
+
+.nf-button-primary:not(:disabled) {
+  border-color: var(--nf-accent);
+  background: var(--nf-accent);
+  color: #fff;
+}
+
+.nf-button-danger:not(:disabled):hover {
+  border-color: var(--nf-error);
+  color: var(--nf-error);
+}
+
+/* --- modal ------------------------------------------------------------- */
+
+/* Below our own PrimeVue overlays (z-index 1001+) and the host dialogs (1100+). */
+.nf-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.nf-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(960px, calc(100vw - 32px));
+  height: min(720px, calc(100vh - 32px));
+  padding: 0;
+  border: 1px solid var(--nf-border);
+  border-radius: 10px;
+  background: var(--nf-panel);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  outline: none;
+  overflow: hidden;
+}
+
+.nf-modal-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--nf-border);
+}
+
+.nf-modal-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.nf-modal-body {
+  flex: 1;
+  min-height: 0;
+  padding: 10px 12px;
+}
+
+/* --- sidebar ----------------------------------------------------------- */
+
+.nf-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  padding: 8px;
+}
+
+.nf-sidebar > .nf-editor-host {
+  flex: 1;
+}
+
+.nf-sidebar-header {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* --- editor ------------------------------------------------------------ */
+
+.nf-editor-host {
+  container-type: inline-size;
+  height: 100%;
+  min-height: 0;
+}
+
+.nf-editor {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) 1fr;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+  font-size: var(--nf-font-size);
+  color: var(--nf-fg);
+}
+
+.nf-editor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+
+.nf-listbox {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius);
+  background: var(--nf-bg);
+}
+
+.nf-listbox-header {
+  padding: 6px;
+  border-bottom: 1px solid var(--nf-border);
+}
+
+/* Filter field: PrimeVue renders a search icon after the input; overlay it on the right. */
+[data-pc-name='pcfiltercontainer'] {
+  position: relative;
+}
+
+[data-pc-name='pcfiltercontainer'] .nf-input {
+  padding-right: 24px;
+}
+
+[data-pc-name='pcfiltericoncontainer'] {
+  display: flex;
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  color: var(--nf-muted);
+  pointer-events: none;
+}
+
+.nf-listbox-list-container {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.nf-editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.nf-section-header,
+.nf-editor-actions {
+  flex-wrap: wrap;
+}
+
+.nf-editor-empty {
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.nf-field-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.nf-field-label {
+  color: var(--nf-muted);
+  font-size: 11px;
+}
+
+.nf-field-static {
+  color: var(--nf-muted);
+  font-family: monospace;
+}
+
+.nf-section-header {
+  margin-top: 4px;
+}
+
+.nf-var-table {
+  display: grid;
+  grid-template-columns: minmax(80px, 30%) 1fr auto;
+  align-items: start;
+  gap: 4px;
+}
+
+.nf-editor-actions {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--nf-border);
+  background: var(--nf-panel);
+}
+
+/* Narrow (sidebar): list on top, form below */
+@container (max-width: 560px) {
+  .nf-editor {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(120px, 35%) 1fr;
+  }
+}
