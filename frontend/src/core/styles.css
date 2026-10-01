@@ -378,17 +378,23 @@
   cursor: pointer;
 }
 
-.nf-ps-cell:disabled {
+.nf-ps-cell[aria-disabled='true'] {
   cursor: default;
 }
 
+.nf-ps-cell:focus-visible {
+  outline: 2px solid var(--nf-accent);
+  outline-offset: 1px;
+}
+
+/* The img must receive pointer events so right-click gives the browser's image menu. */
 .nf-ps-cell img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  pointer-events: none;
   user-select: none;
+  -webkit-user-drag: none;
 }
 
 .nf-ps-cell::after {
@@ -400,7 +406,7 @@
   pointer-events: none;
 }
 
-.nf-ps-cell:hover:not(:disabled)::after {
+.nf-ps-cell:hover:not([aria-disabled='true'])::after {
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 

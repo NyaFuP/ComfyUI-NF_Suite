@@ -106,19 +106,36 @@ const progressPercent = computed(() => {
   <div class="nf-root nf-ps">
     <div ref="area" class="nf-ps-area">
       <div v-if="state.candidates.length" class="nf-ps-grid" :style="gridStyle">
-        <button
+        <!-- A div (not <button>): some browsers target the button instead of the <img> on
+             right-click, which hides "Copy image" / "Save image as" from the native menu. -->
+        <div
           v-for="(url, i) in urls"
           :key="`${state.batchId}-${i}`"
-          type="button"
+          role="button"
+          tabindex="0"
           class="nf-ps-cell"
           :class="{ selected: state.selection.includes(i) }"
           :title="`#${i + 1}`"
-          :disabled="ctl.busy"
+          :aria-label="`Image ${i + 1}`"
+          :aria-pressed="state.selection.includes(i)"
+          :aria-disabled="ctl.busy"
           @click="ctl.toggle(i)"
+          @keydown.enter.prevent="ctl.toggle(i)"
+          @keydown.space.prevent="ctl.toggle(i)"
         >
-          <img :src="url" alt="" draggable="false" @load="onImageLoad($event, i)" @error="ctl.markExpired()" />
+          <!-- Right-click on the image opens the browser's own menu (copy / save / open image):
+               stop the event so ComfyUI does not open its node menu instead. -->
+          <img
+            :src="url"
+            :alt="`Candidate ${i + 1}`"
+            draggable="false"
+            @dragstart.prevent
+            @contextmenu.stop
+            @load="onImageLoad($event, i)"
+            @error="ctl.markExpired()"
+          />
           <span class="nf-ps-badge">{{ i + 1 }}</span>
-        </button>
+        </div>
       </div>
     </div>
 
