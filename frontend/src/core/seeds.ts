@@ -32,8 +32,13 @@ interface ValueWidget {
 export interface SeedNode {
   id: number | string
   widgets?: ValueWidget[]
-  inputs?: unknown[]
-  getInputNode(slot: number): SeedNode | null | undefined
+  inputs?: { link?: number | string | null }[]
+  graph?: {
+    getLink(id: number | string): { origin_id: number | string } | null | undefined
+    getNodeById(id: number | string): SeedNode | null | undefined
+  } | null
+  /** Set on subgraph nodes. */
+  subgraph?: { nodes: SeedNode[] }
 }
 
 export interface SeedChange {
@@ -51,21 +56,30 @@ function isControlWidget(widget: unknown): widget is ControlWidget {
   return Array.isArray(values) && values.includes('randomize') && values.includes('fixed')
 }
 
-/** All nodes upstream of `start` (each once, `start` excluded). */
+/**
+ * All nodes upstream of `start` (each once, `start` excluded), including every node inside
+ * upstream subgraphs. Links are resolved through the node's graph like the base
+ * LGraphNode.getInputLink: SubgraphNode overrides getInputNode/getInputLink to look inside
+ * the subgraph, which throws "reading 'getLinks'" for most input slots (frontend 1.53.6).
+ */
 export function collectUpstream(start: SeedNode): SeedNode[] {
   const seen = new Set<SeedNode>([start])
   const result: SeedNode[] = []
   const stack = [start]
+  const visit = (node: SeedNode | null | undefined) => {
+    if (!node || seen.has(node)) return
+    seen.add(node)
+    result.push(node)
+    stack.push(node)
+  }
   while (stack.length) {
     const current = stack.pop()!
-    for (let slot = 0; slot < (current.inputs?.length ?? 0); slot++) {
-      const origin = current.getInputNode(slot)
-      if (origin && !seen.has(origin)) {
-        seen.add(origin)
-        result.push(origin)
-        stack.push(origin)
-      }
+    for (const input of current.inputs ?? []) {
+      if (input.link == null) continue
+      const link = current.graph?.getLink(input.link)
+      if (link) visit(current.graph?.getNodeById(link.origin_id))
     }
+    current.subgraph?.nodes.forEach(visit)
   }
   return result
 }

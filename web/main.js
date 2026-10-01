@@ -8846,13 +8846,17 @@ function Sg(e) {
   return Array.isArray(t) && t.includes("randomize") && t.includes("fixed");
 }
 function wg(e) {
-  const t = /* @__PURE__ */ new Set([e]), n = [], i = [e];
+  const t = /* @__PURE__ */ new Set([e]), n = [], i = [e], o = (r) => {
+    !r || t.has(r) || (t.add(r), n.push(r), i.push(r));
+  };
   for (; i.length; ) {
-    const o = i.pop();
-    for (let r = 0; r < (o.inputs?.length ?? 0); r++) {
-      const s = o.getInputNode(r);
-      s && !t.has(s) && (t.add(s), n.push(s), i.push(s));
+    const r = i.pop();
+    for (const s of r.inputs ?? []) {
+      if (s.link == null) continue;
+      const l = r.graph?.getLink(s.link);
+      l && o(r.graph?.getNodeById(l.origin_id));
     }
+    r.subgraph?.nodes.forEach(o);
   }
   return n;
 }

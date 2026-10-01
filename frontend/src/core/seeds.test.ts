@@ -1,6 +1,27 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { collectUpstream, controlledNumberWidgets, randomValue, rerollSeeds, type SeedNode } from './seeds'
+
+type Graph = NonNullable<SeedNode['graph']> & { nodes: Map<SeedNode['id'], SeedNode>; links: Map<number, { origin_id: SeedNode['id'] }> }
+
+function makeGraph(): Graph {
+  const nodes = new Map<SeedNode['id'], SeedNode>()
+  const links = new Map<number, { origin_id: SeedNode['id'] }>()
+  return { nodes, links, getLink: (id) => links.get(id as number), getNodeById: (id) => nodes.get(id) ?? null }
+}
+
+let root: Graph
+let nextLink: number
+beforeEach(() => {
+  root = makeGraph()
+  nextLink = 1
+})
+
+function link(origin: SeedNode | null, graph: Graph = root): { link: number | null } {
+  if (!origin) return { link: null }
+  graph.links.set(nextLink, { origin_id: origin.id })
+  return { link: nextLink++ }
+}
 
 function control(value = 'fixed') {
   return {
@@ -16,13 +37,10 @@ function seedWidget(value = 5, opts: Record<string, number> = { min: 0, max: 100
   return { name: 'seed', type: 'number', value, options: opts, linkedWidgets: [ctrl], callback: vi.fn() }
 }
 
-function node(id: number, widgets: unknown[] = [], inputs: (SeedNode | null)[] = []): SeedNode {
-  return {
-    id,
-    widgets: widgets as SeedNode['widgets'],
-    inputs: inputs.map(() => ({})),
-    getInputNode: (slot: number) => inputs[slot] ?? null
-  }
+function node(id: number, widgets: unknown[] = [], inputs: (SeedNode | null)[] = [], graph: Graph = root): SeedNode {
+  const n: SeedNode = { id, widgets: widgets as SeedNode['widgets'], inputs: inputs.map((o) => link(o, graph)), graph }
+  graph.nodes.set(id, n)
+  return n
 }
 
 describe('collectUpstream', () => {
@@ -37,9 +55,29 @@ describe('collectUpstream', () => {
   it('survives cycles', () => {
     const a = node(1)
     const b = node(2, [], [a])
-    ;(a as { getInputNode: (slot: number) => SeedNode | null }).getInputNode = () => b
-    a.inputs = [{}]
+    a.inputs = [link(b)]
     expect(collectUpstream(node(3, [], [b])).map((n) => n.id).sort()).toEqual([1, 2])
+  })
+
+  it('includes the nodes inside upstream subgraphs, nested ones too', () => {
+    const nested = makeGraph()
+    const deep = node(30, [], [], nested)
+    const inner = makeGraph()
+    const sampler = node(20, [], [], inner)
+    const nestedNode = { ...node(21, [], [], inner), subgraph: { nodes: [deep] } }
+    inner.nodes.set(21, nestedNode)
+    const prompt = node(1)
+    // The host's SubgraphNode.getInputNode throws "reading 'getLinks'" for most slots
+    // (frontend 1.53.6), so it must not be used.
+    const sub = {
+      ...node(2, [], [prompt, null]),
+      subgraph: { nodes: [sampler, nestedNode] },
+      getInputNode: () => {
+        throw new TypeError("Cannot read properties of undefined (reading 'getLinks')")
+      }
+    }
+    root.nodes.set(2, sub)
+    expect(collectUpstream(node(3, [], [sub])).map((n) => n.id).sort()).toEqual([1, 2, 20, 21, 30])
   })
 })
 

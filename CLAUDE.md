@@ -372,6 +372,7 @@ NF_Tools の `NFPreviewSelector2` をNF_Suiteに統合し、待機方式を部�
 - このバージョンには、ジョブ単位のキャンセルAPI(`cancelJob`、`/api/jobs/{id}/cancel`)がない。実行中は `/interrupt` にprompt_idを渡し、待機中は `/queue` のdeleteで消す
 - `app.queuePrompt(…, queueNodeIds)` はprompt_idを返さない。`api.queuePrompt` を直接使うとprompt_idは得られるが、ウィジェットの `beforeQueued` は呼ばれず、本体の実行中ジョブの記録にも登録されない
 - 入力定義で `control_after_generate` に文字列(例 `"fixed"`)を指定すると、本体のフロントは、それを制御ウィジェットの**名前**にも使う(本体の `PrimitiveInt` でも名前が `fixed` になる)。制御ウィジェットは名前で探さず、対象ウィジェットの `linkedWidgets` からたどること
+- 上流をたどるときに `node.getInputNode(slot)` を使わない。Frontend 1.53.6 の `SubgraphNode` は `getInputLink(slot)` を上書きしており、入力の番号でサブグラフの**出力**側(`subgraph.outputNode.slots`)を引くため、多くのスロットで「Cannot read properties of undefined (reading 'getLinks')」になる。`node.graph.getLink(input.link)` → `getNodeById(origin_id)` で解決し、サブグラフノードは `subgraph.nodes` で中に入る(`core/seeds.ts` の `collectUpstream`、2026-10-02 実機で確認)
 - 旧ノードの互換:ノードを別パッケージから移すときは node_id・入力名・ウィジェットの順序を変えない(workflow JSON の `widgets_values` は位置で復元される)。変えるときは `io.NodeReplace` を登録する。`old_widget_ids` は旧ノードのウィジェットの並び順(リンク入力は含めない)
 - (NF_Toolsから引き継いだ知見)`addDOMWidget` のオプションに `computeSize` を入れないこと。オプションはウィジェット本体にコピーされ、LiteGraphは `widget.computeSize` があると高さ固定のレイアウトを使うため、ノードの縦方向のリサイズができなくなる。最小の高さは `getMinHeight` で指定する
 - npm 11 で vitest 4系を入れると、依存解決が `Cannot read properties of null (reading 'edgesOut')` で失敗する(クリーンな状態でも再現)。vitest 5系なら入る
