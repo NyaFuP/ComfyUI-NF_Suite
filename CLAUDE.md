@@ -309,7 +309,7 @@ NF_Tools の `NFPreviewSelector2` をNF_Suiteに統合し、待機方式を部�
 
 ## 最小構成の実装手順(M0〜M2)
 
-- M0(**完了** 2026-09-29):`pyproject.toml`、`.gitignore` を用意(`git init` と `web/` をコミットするかは保留)
+- M0(**完了** 2026-09-29):`pyproject.toml`、`.gitignore` を用意(`git init` と `web/` のコミットは 2026-10-01 に実施)
 - M1(**完了** 2026-09-29。pytest 128件、実機でノード実行を確認済み。Pythonのみ):`storage.py` `expand.py` `schema.py` とpytest → 読み取り系API(`GET /templates` `GET /templates/{id}` `POST /expand` `GET /info`)→ V3ノード本体(この段階ではSTRINGウィジェットがそのまま見える)
 - M2(**完了** 2026-09-30。Nodes 2.0とLiteGraphの両方で実機確認済み。vitest 32件):冒頭でPrimeVue unstyledの共存を確認するスパイク → Viteの1ファイルビルド → `PromptTemplateNode`(ドロップダウン、プレビュー、Reload)→ snapshotの自動更新。Editは次のフェーズ
 - Template Editor(**完了** 2026-09-30。pytest 147件、vitest 59件、実機確認済み):書き込みAPI → エディタのフォームのロジック → `TemplateEditor.vue` → モーダルとサイドバー
@@ -338,7 +338,7 @@ NF_Tools の `NFPreviewSelector2` をNF_Suiteに統合し、待機方式を部�
 - バンドルサイズ:main.js 約454KB(gzip 約109KB。エディタ追加後)
 - フロントのテスト:`vitest` ^5(環境は node)。テストは `src/**/*.test.ts` に置く。ComfyUIに触る `@/core/comfy` は `vi.mock` で偽物に置き換え、ノードはウィジェット配列だけの偽物で表す(`controller.test.ts` を参照)
 - UIの文言は英語で確定
-- `web/` をGitにコミットするかは保留(`git init` も未実施)
+- Git:2026-10-01 に `git init`。`web/`(`main.js` / `main.css` / `main.js.map`)もコミットする(git clone や ComfyUI Manager からのインストールでビルドなしに動かすため)。**フロントのソースを変えたら、`npm test` と `npm run build` を通してから、`frontend/src` と `web/` を同じコミットに入れること**
 - 起動:開発時は `python main.py --port 8189`(venvを有効にして)。普段は `start.bat`(ポート8188、`--enable-manager`)
 
 ## 既知のリスク

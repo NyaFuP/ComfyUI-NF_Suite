@@ -6,4 +6,5 @@ __pycache__/
 frontend/node_modules/
 *.tsbuildinfo
 
-# web/ (build output): commit policy undecided — see CLAUDE.md
+# web/ (build output) IS committed so the node works without a build step.
+# Rebuild (npm run build in frontend/) and commit it together with frontend/src changes.
