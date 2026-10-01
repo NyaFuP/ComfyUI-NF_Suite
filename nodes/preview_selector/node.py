@@ -31,7 +31,7 @@ class PreviewSelector(io.ComfyNode):
         return io.Schema(
             node_id="NF_PreviewSelector",
             display_name="NF Preview Selector",
-            category="NyaFu/image",
+            category="NF Suite/image",
             description=(
                 "Shows the images as a gallery. In review_and_select mode the downstream part waits "
                 "until you pick images and press Continue (nothing is blocked while you choose)."
@@ -73,7 +73,7 @@ class PreviewSelectorSource(io.ComfyNode):
         return io.Schema(
             node_id="NF_PreviewSelectorSource",
             display_name="NF Preview Selector (continue)",
-            category="NyaFu/image",
+            category="NF Suite/image",
             description="Internal: queued by NF Preview Selector's Continue button.",
             inputs=[
                 io.String.Input("batch_id", default=""),

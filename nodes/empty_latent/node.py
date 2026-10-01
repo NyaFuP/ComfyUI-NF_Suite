@@ -31,7 +31,7 @@ class EmptyLatentImage(io.ComfyNode):
         return io.Schema(
             node_id="NFEmptyLatentImage",
             display_name="NF Empty Latent Image",
-            category="NyaFu/latent",
+            category="NF Suite/latent",
             description="Empty Latent Image from a long side, an aspect ratio and an orientation.",
             inputs=[
                 io.Int.Input("long_side", default=1024, min=64, max=8192, step=64, tooltip="Size of the long side (pixels)"),
@@ -58,7 +58,7 @@ class PresetEmptyLatentImage(io.ComfyNode):
         return io.Schema(
             node_id="NFPresetEmptyLatentImage",
             display_name="NF Preset Empty Latent Image",
-            category="NyaFu/latent",
+            category="NF Suite/latent",
             description="Empty Latent Image from a common size preset.",
             inputs=[
                 io.Combo.Input("preset", options=list(PRESETS), default="SDXL (1024x1024)", tooltip="Select preset size"),

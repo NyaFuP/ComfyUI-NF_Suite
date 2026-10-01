@@ -37,7 +37,7 @@ class IndependentQueue(io.ComfyNode):
         return io.Schema(
             node_id="NF_IndependentQueue",
             display_name="NF Independent Queue",
-            category="NyaFu/queue",
+            category="NF Suite/queue",
             description="Run only the upstream branch of this node with its own Run button and show the result here.",
             inputs=_inputs(),
             outputs=[],
@@ -56,7 +56,7 @@ class IndependentQueueRun(io.ComfyNode):
         return io.Schema(
             node_id="NF_IndependentQueueRun",
             display_name="NF Independent Queue (run)",
-            category="NyaFu/queue",
+            category="NF Suite/queue",
             description="Internal: output-node variant queued by NF Independent Queue's Run button.",
             inputs=_inputs(),
             outputs=[],

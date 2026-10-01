@@ -17,7 +17,7 @@ class PromptTemplate(io.ComfyNode):
         return io.Schema(
             node_id="NF_PromptTemplate",
             display_name="NF Prompt Template",
-            category="NyaFu/prompt",
+            category="NF Suite/prompt",
             description="Select a template from the NF prompt template library and expand its variables.",
             inputs=[
                 io.String.Input("template_id", default="", tooltip="Template id in the library"),
