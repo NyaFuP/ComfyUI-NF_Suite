@@ -289,6 +289,14 @@ NF_Tools の `NFPreviewSelector2` をNF_Suiteに統合し、待機方式を部�
 - 縦横比は1枚目の画像の実寸から取る(バッチ内は同じ大きさが前提)
 - 新しいノードだけ初期サイズ(420×480)にする。それ以外でノードサイズを変える処理はない(`fitNodeHeight` も使わない)
 - 幅が380px以下のときは、下部のバーを2行にする(コンテナクエリ)
+- 画像の右クリック:**本体のノードメニューに「Copy Image / Open Image / Save Image (#n)」を追加する**(`getNodeMenuItems`、`preview_selector/menu.ts`。2026-10-01、ユーザー判断)
+  - ブラウザ標準のメニューを使う案(A案、`c40d232`)は破棄して `git revert` した。画像に `pointer-events` を戻すと、画像の上でホイールによるズームが効かなくなるため。**画像の `pointer-events: none` は外さないこと**
+  - 対象の画像:直前(1.5秒以内)に右クリックした画像 → 選択中の最初の画像 → #1(`contextMenu.ts` の `menuTargetIndex`)。候補がない・期限切れのときは項目を出さない
+  - Nodes 2.0:画像の右クリックはノード要素の `@contextmenu` まで伝わり、本体がノードメニューを開く。こちらは右クリックした画像を記録するだけ
+  - LiteGraph:ギャラリーはキャンバスの上のDOMなので、キャンバスに右クリックが届かない。画像の右クリックで既定動作を止め、`LGraphCanvas.adjustMouseEvent` + `processContextMenu` でノードメニューを開く(`core/comfy.ts` の `openNodeContextMenu`)。どちらも公開メソッドだが、本体の内部に近い
+  - 画像の枠のボタンは `disabled` を使わず `aria-disabled`(無効なボタンには右クリックのイベントが届かないため)
+  - Copy Imageは `navigator.clipboard.write` + `ClipboardItem`。`write()` はクリック内で即座に呼び、画像はPromiseで渡す(先に `fetch` を待つとユーザー操作の扱いが切れることがある)。https/localhost以外では使えず、拒否されたときは「Open Imageを使って」と案内する
+  - ブラウザペイン(Claude Codeの確認環境)ではクリップボードの書き込み権限が `denied` で、Open Imageは同じタブで開く。コピーの成功は通常のChromeで確認すること
 - 候補の画像が読み込めない(ComfyUIを再起動して一時ファイルが消えた)ときは「もう一度Generateしてください」と表示し、Continueを押せなくする
 - `batch_id` は「20桁の単調増加ナノ秒 + 乱数12桁」。Windowsではファイルの更新時刻が粗く、連続保存の順序を時刻で判断できないため
 - `queuePartial` は `targetIds`(配列、またはプロンプトを受け取って対象を返す関数)を受け取る
@@ -368,7 +376,7 @@ NF_Tools の `NFPreviewSelector2` をNF_Suiteに統合し、待機方式を部�
 - (NF_Toolsから引き継いだ知見)`addDOMWidget` のオプションに `computeSize` を入れないこと。オプションはウィジェット本体にコピーされ、LiteGraphは `widget.computeSize` があると高さ固定のレイアウトを使うため、ノードの縦方向のリサイズができなくなる。最小の高さは `getMinHeight` で指定する
 - npm 11 で vitest 4系を入れると、依存解決が `Cannot read properties of null (reading 'edgesOut')` で失敗する(クリーンな状態でも再現)。vitest 5系なら入る
 - venvの `python.exe` は本体のPythonを子プロセスとして起動する。Claude CodeのTaskStopでは親しか止まらず、ポート8189を持つ子プロセスが残ることがある。止めるときは `main.py --port 8189` を含むpythonプロセスをすべて止める
-- (解消済み)ブラウザのコンソールに出ていた「ComfyApp graph accessed before initialization」は NF_Tools(`preview_selector_2.js`)由来だった。NF_Toolsの削除で出なくなるはず
+- ブラウザのコンソールに出る「ComfyApp graph accessed before initialization」は、`app.rootGraph` をグラフの初期化前に読んだときに本体が出すもの。**発生源は未特定**(以前「NF_Tools由来」と書いたのは誤り。NF_Tools削除後も読み込みのたびに出る)。NF_Suiteは操作時にしか `rootGraph` を読まず、`app.isGraphReady` で確認してから読む(`core/comfy.ts`)
 - Vueノード描画(Nodes 2.0)では、DOMウィジェットの要素が別の親要素へ付け替えられる。親の参照を保持しない、サイズは `ResizeObserver` で追う、ホイールイベントは自前で止める
 - `addDOMWidget` と `widget.hidden` は内部API系統(`scripts/domWidget`)に属する。安定して使えるimportは `scripts/app.js` と `scripts/api.js` のみ
 - `--p-*` のCSS変数は公式に保証された仕様ではない

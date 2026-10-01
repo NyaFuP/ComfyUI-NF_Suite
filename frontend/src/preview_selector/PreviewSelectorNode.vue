@@ -2,7 +2,7 @@
 import Button from 'primevue/button'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import { imageUrl } from '@/core/comfy'
+import { imageUrl, isVueNodesMode, openNodeContextMenu } from '@/core/comfy'
 
 import type { PreviewSelectorController } from './controller'
 import { computeGridLayout, type GridLayout } from './gridLayout'
@@ -67,6 +67,20 @@ watch(
 
 const urls = computed(() => state.candidates.map((c) => imageUrl(c)))
 
+/**
+ * Right-click on a candidate: remember it for the node menu's Copy/Open/Save Image items.
+ * Nodes 2.0 opens the node menu from the node element (the event bubbles there).
+ * In LiteGraph mode the gallery sits above the canvas, so open the node menu ourselves
+ * instead of the browser's menu.
+ */
+function onCellContextMenu(event: MouseEvent, index: number) {
+  ctl.noteContextClick(index)
+  if (isVueNodesMode()) return
+  event.preventDefault()
+  event.stopPropagation()
+  openNodeContextMenu(ctl.node, event)
+}
+
 function onImageLoad(event: Event, index: number) {
   const img = event.target as HTMLImageElement
   if (index === 0 && img.naturalWidth && img.naturalHeight) aspect.value = img.naturalWidth / img.naturalHeight
@@ -113,8 +127,9 @@ const progressPercent = computed(() => {
           class="nf-ps-cell"
           :class="{ selected: state.selection.includes(i) }"
           :title="`#${i + 1}`"
-          :disabled="ctl.busy"
+          :aria-disabled="ctl.busy"
           @click="ctl.toggle(i)"
+          @contextmenu="onCellContextMenu($event, i)"
         >
           <img :src="url" alt="" draggable="false" @load="onImageLoad($event, i)" @error="ctl.markExpired()" />
           <span class="nf-ps-badge">{{ i + 1 }}</span>

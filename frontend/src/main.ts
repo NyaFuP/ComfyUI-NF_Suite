@@ -5,6 +5,7 @@ import { attachIndependentQueueUi } from './independent_queue/attach'
 import { NODE_CLASS as INDEPENDENT_QUEUE_CLASS } from './independent_queue/runner'
 import { attachPreviewSelectorUi } from './preview_selector/attach'
 import { NODE_CLASS as PREVIEW_SELECTOR_CLASS } from './preview_selector/logic'
+import { previewSelectorMenuItems } from './preview_selector/menu'
 import { attachPromptTemplateUi } from './prompt_template/attach'
 import { registerTemplateSidebar } from './prompt_template/sidebar'
 import { NODE_CLASS } from './prompt_template/types'
@@ -30,5 +31,10 @@ registerExtension({
     if (node.comfyClass === NODE_CLASS) attachPromptTemplateUi(node)
     else if (node.comfyClass === INDEPENDENT_QUEUE_CLASS) attachIndependentQueueUi(node)
     else if (node.comfyClass === PREVIEW_SELECTOR_CLASS) attachPreviewSelectorUi(node)
+  },
+  // Only this node's menu gets the items (right-clicking other nodes or the canvas is unchanged).
+  getNodeMenuItems(node) {
+    if (node.comfyClass !== PREVIEW_SELECTOR_CLASS) return []
+    return previewSelectorMenuItems(node) as ReturnType<NonNullable<Parameters<typeof registerExtension>[0]['getNodeMenuItems']>>
   }
 })

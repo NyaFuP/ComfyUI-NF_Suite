@@ -20,9 +20,17 @@ import {
 import { type Job, queuePartial } from '@/core/jobs'
 import { rerollSeeds, type SeedMode, type SeedNode } from '@/core/seeds'
 
+import { type ContextClick, menuTargetIndex } from './contextMenu'
 import { buildContinuePrompt, downstreamOutputs, toggleIndex } from './logic'
 
 const PROPERTY = 'nf_preview_selector'
+
+// node -> controller, for the node context menu (getNodeMenuItems receives only the node)
+const controllers = new WeakMap<object, PreviewSelectorController>()
+
+export function getController(node: object): PreviewSelectorController | undefined {
+  return controllers.get(node)
+}
 
 interface Persisted {
   batchId: string | null
@@ -44,7 +52,10 @@ export class PreviewSelectorController {
   readonly queueError = shallowRef<string | null>(null)
   readonly starting = shallowRef(false)
 
+  private contextClick: ContextClick | null = null
+
   constructor(readonly node: ComfyNode) {
+    controllers.set(node, this)
     this.restore()
     onNodeConfigured(node, () => this.restore())
     onNodeExecuted(node, (output) => this.receive(output))
@@ -87,6 +98,22 @@ export class PreviewSelectorController {
     this.state.selection = []
     this.state.expired = false
     this.persist()
+  }
+
+  /** Remember which image was right-clicked, for the node menu that opens next. */
+  noteContextClick(index: number): void {
+    this.contextClick = { index, at: Date.now() }
+  }
+
+  /** Index the node menu's image items act on, or null when there is nothing to act on. */
+  menuTarget(): number | null {
+    if (this.state.expired) return null
+    return menuTargetIndex({
+      clicked: this.contextClick,
+      selection: this.state.selection,
+      count: this.state.candidates.length,
+      now: Date.now()
+    })
   }
 
   /** Called when a candidate image fails to load (temp files are removed on restart). */

@@ -241,9 +241,33 @@ export function getOutputNodeClasses(): Promise<Set<string>> {
   return outputClasses
 }
 
+export function isVueNodesMode(): boolean {
+  return app.extensionManager?.setting?.get<boolean>('Comfy.VueNodes.Enabled') === true
+}
+
+/**
+ * Open the LiteGraph node context menu (the same one as right-clicking the node on the
+ * canvas, including getNodeMenuItems entries) from an event on one of our DOM widgets.
+ * Only needed in LiteGraph mode: there DOM widgets sit above the canvas, so the canvas
+ * never sees the right-click. In Nodes 2.0 the node element opens its menu itself.
+ */
+export function openNodeContextMenu(node: ComfyNode, event: MouseEvent): void {
+  const canvas = app.canvas as unknown as {
+    adjustMouseEvent(e: MouseEvent): void
+    processContextMenu(node: ComfyNode, e: MouseEvent): void
+  }
+  canvas.adjustMouseEvent(event)
+  canvas.processContextMenu(node, event)
+}
+
 /** Title of a root-graph node by id (for progress messages). */
+/** Root graph, or undefined before the app has created it (app.rootGraph logs an error then). */
+function rootGraph() {
+  return app.isGraphReady ? app.rootGraph : undefined
+}
+
 export function nodeTitle(nodeId: string): string {
-  const node = app.rootGraph?.getNodeById?.(Number(nodeId))
+  const node = rootGraph()?.getNodeById?.(Number(nodeId))
   return node?.title ?? `#${nodeId}`
 }
 
@@ -252,5 +276,6 @@ export function nodeTitle(nodeId: string): string {
  * During nodeCreated the node has no graph yet, so "unknown" counts as not in a subgraph.
  */
 export function isInSubgraph(node: ComfyNode): boolean {
-  return !!node.graph && node.graph !== app.rootGraph
+  const root = rootGraph()
+  return !!node.graph && !!root && node.graph !== root
 }
