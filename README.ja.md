@@ -67,7 +67,8 @@ ComfyUI を再起動してください。追加の Python パッケージは不�
   - `follow`：各 seed の control_after_generate の設定に従う
   - `off`：変えない
 - 使い方の例：LLM ノードの seed を `fixed` にしておき、Independent Queue の Run で生成し直します。気に入ったら通常の Run を押すと、LLM ノードは同じ seed のままキャッシュが使われ、選んだプロンプトで画像が生成されます。
-- 今のところ、ルートのグラフに置いたノードだけに対応しています（サブグラフの中では使えません）。
+- 上流にサブグラフがあっても使えます。サブグラフの中の seed も `seed_mode` の対象になります。
+- このノード自体は、今のところルートのグラフに置く必要があります（サブグラフの中に置くと Run できません）。
 
 ### NF Preview Selector
 
@@ -82,7 +83,8 @@ ComfyUI を再起動してください。追加の Python パッケージは不�
   - `review_and_select`：選んで Continue するまで下流を止める（既定）
   - `pass_through`：全部をそのまま流す
   - `take_first` / `take_last`：最初または最後の 1 枚を流す
-- `seed_mode`：Generate の前に上流の seed をどうするか（Independent Queue と同じ）
+- `seed_mode`：Generate の前に上流の seed をどうするか（Independent Queue と同じ。上流のサブグラフの中の seed も対象）
+- Generate と Continue のボタンは、ノードをルートのグラフに置いたときだけ使えます。
 - 出力：`selected_images`、`selected_latents`、`selection_indices`（例 `0,2`）
 - 画像を右クリックすると、ノードメニューに **Copy Image / Open Image / Save Image** が出ます。Copy Image は https または localhost で開いたときだけ使えます。別の PC から http で開いている場合は、Open Image で開いてからコピーしてください。
 - 候補は ComfyUI の temp フォルダに保存されます。ComfyUI を再起動すると消えるので、もう一度 Generate してください。

@@ -67,7 +67,8 @@ Runs only the upstream part of this node instead of the whole workflow. Useful f
   - `follow`: follow each seed's control_after_generate setting
   - `off`: keep the seeds unchanged
 - Example: set the LLM node's seed control to `fixed`, then regenerate with Independent Queue's Run. When you like the result, press the normal Run: the LLM node keeps the same seed, so its cached output is used and the image is generated from the prompt you chose.
-- For now, the node only works in the root graph (not inside subgraphs).
+- Subgraphs upstream are fine: seeds inside them are handled by `seed_mode` too.
+- For now, the node itself must be placed in the root graph (Run does not work inside a subgraph).
 
 ### NF Preview Selector
 
@@ -82,7 +83,8 @@ Shows the images as a grid on the node and passes only the selected ones downstr
   - `review_and_select`: stop the downstream part until you pick images and press Continue (default)
   - `pass_through`: pass every image through
   - `take_first` / `take_last`: pass the first or the last image
-- `seed_mode`: what to do with the upstream seeds before Generate (same as Independent Queue)
+- `seed_mode`: what to do with the upstream seeds before Generate (same as Independent Queue, including seeds inside upstream subgraphs)
+- The Generate and Continue buttons only work when the node is placed in the root graph.
 - Outputs: `selected_images`, `selected_latents`, `selection_indices` (e.g. `0,2`)
 - Right-click an image to get **Copy Image / Open Image / Save Image** in the node menu. Copy Image only works when ComfyUI is opened over https or localhost. When you open it over plain http from another PC, use Open Image and copy from the new tab.
 - Candidates are stored in ComfyUI's temp folder, which is cleared when ComfyUI restarts. Press Generate again after a restart.
