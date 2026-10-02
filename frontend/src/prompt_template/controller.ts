@@ -5,24 +5,32 @@
  */
 import { reactive } from 'vue'
 
-import { type ComfyNode, fitNodeHeight, getWidgetValue, setWidgetValue } from '@/core/comfy'
+import { type ComfyNode, fitNodeHeight, getWidgetValue, isInputConnected, setWidgetValue } from '@/core/comfy'
 
 import { findTemplate } from './libraryStore'
 import { buildSnapshot, parseSnapshot, parseVariables, sameContent } from './logic'
-import { type Snapshot, WIDGET } from './types'
+import { type Snapshot, TEXT_INPUT, WIDGET } from './types'
 
 export interface NodeState {
   templateId: string
   variables: Record<string, string>
   snapshot: Snapshot | null
   pinned: boolean
+  /** The `text` input is linked, so {input} comes from another node. */
+  textConnected: boolean
 }
 
 export class PromptTemplateController {
   readonly state: NodeState
 
   constructor(readonly node: ComfyNode) {
-    this.state = reactive<NodeState>({ templateId: '', variables: {}, snapshot: null, pinned: false })
+    this.state = reactive<NodeState>({
+      templateId: '',
+      variables: {},
+      snapshot: null,
+      pinned: false,
+      textConnected: false
+    })
     this.syncFromWidgets()
   }
 
@@ -31,6 +39,11 @@ export class PromptTemplateController {
     this.state.variables = parseVariables(getWidgetValue(this.node, WIDGET.variables, '{}'))
     this.state.snapshot = parseSnapshot(getWidgetValue(this.node, WIDGET.snapshot, ''))
     this.state.pinned = Boolean(getWidgetValue(this.node, WIDGET.pinSnapshot, false))
+    this.syncConnections()
+  }
+
+  syncConnections(): void {
+    this.state.textConnected = isInputConnected(this.node, TEXT_INPUT)
   }
 
   /** Select a template: reset variable values to its defaults and capture a snapshot. */

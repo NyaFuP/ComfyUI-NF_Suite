@@ -90,6 +90,21 @@ export function onNodeConfigured(node: ComfyNode, listener: () => void): void {
   }
 }
 
+export function isInputConnected(node: ComfyNode, name: string): boolean {
+  return node.inputs?.find((input) => input.name === name)?.link != null
+}
+
+/** Run `listener` after any link of the node is connected or disconnected. */
+export function onNodeConnectionsChange(node: ComfyNode, listener: () => void): void {
+  const target = node as ComfyNode & { onConnectionsChange?: (...args: unknown[]) => unknown }
+  const original = target.onConnectionsChange
+  target.onConnectionsChange = function (this: unknown, ...args: unknown[]) {
+    const result = original?.apply(this, args)
+    listener()
+    return result
+  }
+}
+
 /**
  * Add a DOM widget that is excluded from both the workflow JSON (widget.serialize)
  * and the API prompt (options.serialize).

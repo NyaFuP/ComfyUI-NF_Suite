@@ -40,5 +40,9 @@ export const WIDGET = {
   pinSnapshot: 'pin_snapshot'
 } as const
 
+/** The node's optional link input; when connected it replaces {INPUT_VAR} (nodes/prompt_template/expand.py). */
+export const TEXT_INPUT = 'text'
+export const INPUT_VAR = 'input'
+
 export const NODE_CLASS = 'NF_PromptTemplate'
 export const API_PREFIX = '/nyafu/prompt_template'

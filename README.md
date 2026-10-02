@@ -47,6 +47,13 @@ Template syntax:
 - After replacement, leftover commas, periods and spaces from empty variables are cleaned up.
 - Undefined variables and unclosed brackets produce warnings, not errors.
 
+Text from another node:
+
+- Connect a STRING output (for example a Text node or an LLM node) to the optional `text` input. Its text replaces `{input}` in the template.
+- While `text` is connected, the node preview shows `‹from input›` in place of `{input}`, and the `input` field (if the template defines one) is greyed out.
+- When `text` is not connected, `{input}` is an ordinary variable: define `input` in the template to give it a default value.
+- If `text` is connected but the template has no `{input}`, the node shows a warning.
+
 Storage and reproducibility:
 
 - The library is saved to `ComfyUI/user/__nf_prompt_template/templates.json`. Set the `NF_PROMPT_TEMPLATE_DIR` environment variable to use another folder.

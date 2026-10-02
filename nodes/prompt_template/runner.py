@@ -2,6 +2,7 @@
 
 All functions take the raw widget values:
     template_id: str, variables_raw: str (JSON), snapshot_raw: str (JSON or ""), pin_snapshot: bool
+and, for run(), `text`: the connected `text` input or None.
 and `lookup`: callable(template_id) -> template dict or None.
 """
 
@@ -20,10 +21,10 @@ def _resolve(lookup, template_id, variables_raw, snapshot_raw, pin_snapshot):
     return resolution, variables
 
 
-def run(lookup, template_id, variables_raw, snapshot_raw, pin_snapshot):
+def run(lookup, template_id, variables_raw, snapshot_raw, pin_snapshot, text=None):
     """Return {"positive", "negative", "warnings", "source"}. Raises NFError when not runnable."""
     resolution, variables = _resolve(lookup, template_id, variables_raw, snapshot_raw, pin_snapshot)
-    expanded = expand_template(resolution.template, variables)
+    expanded = expand_template(resolution.template, variables, input_text=text)
     return {
         "positive": expanded["positive"],
         "negative": expanded["negative"],
@@ -42,7 +43,11 @@ def validate(lookup, template_id, variables_raw, snapshot_raw, pin_snapshot):
 
 
 def fingerprint(lookup, template_id, variables_raw, snapshot_raw, pin_snapshot):
-    """Cache key: changes whenever the output could change (including external library edits)."""
+    """Cache key: changes whenever the output could change (including external library edits).
+
+    The connected `text` is not part of it: ComfyUI passes only constants here, and a change
+    upstream already changes the node's cache key.
+    """
     try:
         resolution, variables = _resolve(lookup, template_id, variables_raw, snapshot_raw, pin_snapshot)
     except NFError as e:

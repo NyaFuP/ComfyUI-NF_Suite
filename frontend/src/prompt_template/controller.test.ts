@@ -6,7 +6,7 @@ import type { Template } from './types'
 
 // Replace the ComfyUI adapter with plain widget access on a fake node.
 vi.mock('@/core/comfy', () => {
-  type FakeNode = { widgets: { name: string; value: unknown }[] }
+  type FakeNode = { widgets: { name: string; value: unknown }[]; inputs?: { name: string; link: number | null }[] }
   const find = (node: FakeNode, name: string) => node.widgets.find((w) => w.name === name)
   return {
     getWidgetValue: (node: FakeNode, name: string, fallback: unknown) => find(node, name)?.value ?? fallback,
@@ -15,6 +15,7 @@ vi.mock('@/core/comfy', () => {
       if (w) w.value = value
       return !!w
     },
+    isInputConnected: (node: FakeNode, name: string) => node.inputs?.find((i) => i.name === name)?.link != null,
     fitNodeHeight: () => {},
     fetchApi: () => Promise.reject(new Error('no network in tests'))
   }
@@ -38,7 +39,8 @@ function makeNode(values: Partial<Record<string, unknown>> = {}) {
       { name: 'variables', value: values.variables ?? '{}' },
       { name: 'snapshot', value: values.snapshot ?? '' },
       { name: 'pin_snapshot', value: values.pin_snapshot ?? false }
-    ]
+    ],
+    inputs: [{ name: 'text', link: null as number | null }]
   }
   const widget = (name: string) => node.widgets.find((w) => w.name === name)!
   return { node, widget }
@@ -116,5 +118,14 @@ describe('PromptTemplateController', () => {
     const { node, widget } = makeNode({ template_id: 'gone' })
     controllerFor(node).captureSnapshot()
     expect(widget('snapshot').value).toBe('')
+  })
+
+  it('tracks whether the text input is connected', () => {
+    const { node } = makeNode()
+    const c = controllerFor(node)
+    expect(c.state.textConnected).toBe(false)
+    node.inputs[0].link = 7
+    c.syncConnections()
+    expect(c.state.textConnected).toBe(true)
   })
 })

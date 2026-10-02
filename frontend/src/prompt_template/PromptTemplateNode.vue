@@ -67,6 +67,9 @@ const notice = computed(() => {
 
 // --- preview (expanded by the backend) -----------------------------------------
 
+/** Shown for {input} while the `text` input is linked (its value is only known at run time). */
+const INPUT_MARKER = '‹from input›'
+
 const preview = ref<ExpandResponse | null>(null)
 const previewError = ref<string | null>(null)
 let requestSeq = 0
@@ -88,7 +91,11 @@ async function updatePreview() {
   try {
     const result = await requestJson<ExpandResponse>(`${API_PREFIX}/expand`, {
       method: 'POST',
-      body: JSON.stringify({ template, variables: state.variables })
+      body: JSON.stringify({
+        template,
+        variables: state.variables,
+        input_text: state.textConnected ? INPUT_MARKER : null
+      })
     })
     if (seq !== requestSeq) return
     preview.value = result
@@ -101,7 +108,10 @@ async function updatePreview() {
   props.controller.fit()
 }
 
-watch(() => [resolved.value.template, state.variables], schedulePreview, { immediate: true, deep: true })
+watch(() => [resolved.value.template, state.variables, state.textConnected], schedulePreview, {
+  immediate: true,
+  deep: true
+})
 
 // --- wheel: let scrollable areas scroll instead of zooming the canvas ----------
 
@@ -155,6 +165,7 @@ function onWheel(event: WheelEvent) {
       v-if="resolved.template"
       :defaults="resolved.template.variables"
       :values="state.variables"
+      :text-connected="state.textConnected"
       @update="(name, value) => controller.setVariable(name, value)"
       @reset="(name) => controller.resetVariable(name)"
     />

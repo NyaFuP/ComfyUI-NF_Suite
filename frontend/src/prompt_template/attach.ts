@@ -4,6 +4,7 @@ import {
   getWidget,
   hideWidget,
   onNodeConfigured,
+  onNodeConnectionsChange,
   onWidgetChange
 } from '@/core/comfy'
 import { mountVue } from '@/core/mountVue'
@@ -28,6 +29,7 @@ export function attachPromptTemplateUi(node: ComfyNode): void {
   const pin = getWidget(node, WIDGET.pinSnapshot)
   if (pin) onWidgetChange(pin, () => controller.syncFromWidgets())
   onNodeConfigured(node, () => controller.syncFromWidgets())
+  onNodeConnectionsChange(node, () => controller.syncConnections())
 
   const container = document.createElement('div')
   container.className = 'nf-widget-container'

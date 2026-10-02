@@ -30,6 +30,10 @@ class PromptTemplate(io.ComfyNode):
                     tooltip="Template content captured at queue time (JSON). Used when the template is missing or pinned.",
                 ),
                 io.Boolean.Input("pin_snapshot", default=False, tooltip="Always use the snapshot instead of the library"),
+                io.String.Input(
+                    "text", optional=True, force_input=True,
+                    tooltip="Optional text from another node. Replaces {input} in the template.",
+                ),
             ],
             outputs=[
                 io.String.Output("positive", display_name="positive"),
@@ -48,9 +52,9 @@ class PromptTemplate(io.ComfyNode):
         return runner.fingerprint(lookup_template, template_id, variables, snapshot, pin_snapshot)
 
     @classmethod
-    def execute(cls, template_id, variables, snapshot, pin_snapshot):
+    def execute(cls, template_id, variables, snapshot, pin_snapshot, text=None):
         try:
-            result = runner.run(lookup_template, template_id, variables, snapshot, pin_snapshot)
+            result = runner.run(lookup_template, template_id, variables, snapshot, pin_snapshot, text)
         except NFError as e:
             raise RuntimeError(f"[NF Prompt Template] [{e.code}] {e.message}") from e
         for w in result["warnings"]:

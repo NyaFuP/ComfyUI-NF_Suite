@@ -149,10 +149,13 @@ NF_Suite/
   - 2つ以上の空白は1つにする。カンマの前の空白、および直後が空白か行末のピリオドの前の空白は削除する
   - `1.2` のような小数や `(word:1.2)` の重みは変化しない。`...` は `.` に詰まる
 - 未定義の変数(そのまま残す)、未使用の変数、`()` `[]` `{}` の閉じ忘れは、エラーにせず警告を返す
-- 変数を他ノードの出力とつなぐ入力口は作らない
+- 他ノードとつなぐ入力口は `text`(STRING、入力口のみ、任意)の1つだけ(2026-10-02、ユーザー判断で変更。以前は「入力口は作らない」)。つながっているときは、その文字列で予約変数 `{input}` を置き換え、テンプレートのデフォルトやノードの入力欄より優先する。つながっていなければ `input` は普通の変数として扱う。つながっているのに `{input}` がなければ警告 `input_unused`
+  - `fingerprint_inputs` には `text` を入れない(本体はリンクの値を渡さない。上流が変われば本体のキャッシュキーが変わる)
+  - ノードのプレビューは、`/expand` に `input_text: '‹from input›'` を渡して表示する。変数 `input` の入力欄はグレーアウトする
+  - 予約名は `expand.py` の `INPUT_VAR` と `types.ts` の `INPUT_VAR` の2か所。変えるときは両方を直す
 
 ### ノードの入力と状態
-- 入力はプレーンなウィジェット:`template_id`(STRING)、`variables`(STRING/JSON)、`snapshot`(STRING/JSON、空可)、`pin_snapshot`(BOOLEAN)。出力は `positive` と `negative`(STRING)
+- 入力はプレーンなウィジェット:`template_id`(STRING)、`variables`(STRING/JSON)、`snapshot`(STRING/JSON、空可)、`pin_snapshot`(BOOLEAN)、任意の入力口 `text`(STRING)。出力は `positive` と `negative`(STRING)
 - フロントはこれらを `hidden` にし、`serialize:false` のDOMウィジェット(Vue)で編集する。拡張JSが壊れても素のテキスト欄として動くようにするため
 - 変数の入力欄は本物のウィジェットとして増減させず、`VariableFields` が描画して `variables` JSONに書き込む
 - `fingerprint_inputs` は、実際に使うテンプレート内容+`variables` のハッシュを返す(外部JSONの変更で再実行させる)
@@ -182,7 +185,7 @@ NF_Suite/
 | `GET /info` | — | `{api_version, storage_path, readonly, load_error?}` |
 
 - エラーは `{error:{code, message, details?}}`。code:`BAD_REQUEST`(400) `NOT_FOUND`(404) `CONFLICT` / `DUPLICATE_ID`(409) `INVALID_TEMPLATE` / `INVALID_LIBRARY`(422) `LIBRARY_CORRUPT`(503) `INTERNAL_ERROR`(500)
-- ノードの検証・実行時のエラーコード:`NO_TEMPLATE` `SNAPSHOT_MISSING` `INVALID_VARIABLES` `INVALID_SNAPSHOT`。警告コード:`undefined_variable` `unused_variable` `unbalanced_bracket` `snapshot_outdated` `template_missing` `library_unavailable`
+- ノードの検証・実行時のエラーコード:`NO_TEMPLATE` `SNAPSHOT_MISSING` `INVALID_VARIABLES` `INVALID_SNAPSHOT`。警告コード:`undefined_variable` `unused_variable` `unbalanced_bracket` `snapshot_outdated` `template_missing` `library_unavailable` `input_unused`
 - 全エンドポイントを実装済み(書き込み系はエディタのフェーズで追加)。`base_revision` がないと400。DELETEはクエリ `?base_revision=` で渡す
 - フロントの書き込み(`libraryStore` の createTemplate / updateTemplate / deleteTemplate)は、常に手元の `library.revision` を送る。409のときはライブラリを読み直してからエラーを投げる(フォームの編集内容は残り、もう一度保存すると新しいrevisionで送られる)
 - 複製専用のAPIは作らない(フロントでコピーしてPOST)
