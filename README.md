@@ -127,6 +127,10 @@ Run the Python tests with ComfyUI's venv:
 python -m pytest
 ```
 
+## Support
+
+This is a personal project. Issues and pull requests are welcome, but I may not be able to respond to them or merge them. Feel free to fork it and change it for your own use.
+
 ## License
 
 [MIT](LICENSE)
