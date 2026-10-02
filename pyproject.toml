@@ -1,10 +1,18 @@
 [project]
 name = "nf-suite"
-version = "0.1.0"
-description = "NyaFu custom node suite for ComfyUI (Prompt Template, and more)"
-license = "MIT"
+version = "1.0.0"
+description = "ComfyUI custom nodes: Prompt Template, Independent Queue, Preview Selector and Empty Latent helpers."
+license = {file = "LICENSE"}
 requires-python = ">=3.10"
 dependencies = []
+
+[project.urls]
+Repository = "https://github.com/NyaFuP/ComfyUI-NF_Suite"
+
+[tool.comfy]
+PublisherId = "nyafu"
+DisplayName = "NF Suite"
+Icon = ""
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
