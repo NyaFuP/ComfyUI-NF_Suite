@@ -100,7 +100,39 @@ def test_collapses_spaces_and_removes_space_before_comma():
 
 def test_cleanup_is_applied_per_line():
     text, _ = expand_text("{a}, b\n, c,\n{d}", {"a": "", "d": ""})
-    assert text == "b\nc\n"
+    assert text == "b\nc,"
+
+
+def test_keeps_commas_the_template_ends_lines_with():
+    values = {"Quality": "masterpiece", "input": "a knight", "style": "anime"}
+    text, _ = expand_text("{Quality},\n{input},\n{style},", values)
+    assert text == "masterpiece,\na knight,\nanime,"
+
+
+def test_drops_a_line_emptied_by_an_empty_value():
+    values = {"Quality": "masterpiece", "input": "", "style": "anime"}
+    text, _ = expand_text("{Quality},\n{input},\n{style},", values)
+    assert text == "masterpiece,\nanime,"
+
+
+def test_removes_comma_left_at_line_end_by_empty_value_in_multiline_text():
+    text, _ = expand_text("{a}, {b}\nc", {"a": "x", "b": ""})
+    assert text == "x\nc"
+
+
+def test_keeps_blank_lines_written_in_the_template():
+    text, _ = expand_text("a,\n\nb", {})
+    assert text == "a,\n\nb"
+
+
+def test_multiline_value_keeps_its_own_line_end_commas():
+    text, _ = expand_text("{a}", {"a": "x,\ny"})
+    assert text == "x,\ny"
+
+
+def test_undefined_variable_on_several_lines_warned_once():
+    _, warnings = expand_text("{x}\n{x}", {})
+    assert codes(warnings) == ["undefined_variable"]
 
 
 # --- bracket check ----------------------------------------------------------

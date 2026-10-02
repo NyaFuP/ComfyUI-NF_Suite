@@ -35,40 +35,43 @@ def _warning(code, message, **extra):
 
 def _substitute(text, values):
     """Replace placeholders in a single pass (values are never expanded again)."""
-    undefined = []
+    return PLACEHOLDER_RE.sub(lambda m: values.get(m.group(1), m.group(0)), text)
 
-    def repl(match):
-        name = match.group(1)
-        if name in values:
-            return values[name]
-        if name not in undefined:
-            undefined.append(name)
-        return match.group(0)
 
-    result = PLACEHOLDER_RE.sub(repl, text)
-    warnings = [
-        _warning("undefined_variable", f"Variable '{name}' is not defined", var=name)
-        for name in undefined
-    ]
-    return result, warnings
+def _undefined_warnings(text, values):
+    undefined = dict.fromkeys(name for name in PLACEHOLDER_RE.findall(text) if name not in values)
+    return [_warning("undefined_variable", f"Variable '{name}' is not defined", var=name) for name in undefined]
 
 
 def _collapse_separator_run(match):
     return "." if "." in match.group(0) else ","
 
 
-def _cleanup_line(line):
+def _cleanup_line(line, keep_trailing_comma):
     line = _SEPARATOR_RUN_RE.sub(_collapse_separator_run, line)
     line = _LEADING_SEPARATORS_RE.sub("", line)
-    line = _TRAILING_COMMAS_RE.sub("", line)
+    if not keep_trailing_comma:
+        line = _TRAILING_COMMAS_RE.sub("", line)
     line = _MULTI_SPACE_RE.sub(" ", line)
     line = _SPACE_BEFORE_COMMA_RE.sub(",", line)
     line = _SPACE_BEFORE_PERIOD_RE.sub(".", line)
     return line.strip(" \t")
 
 
-def cleanup_separators(text):
-    return "\n".join(_cleanup_line(line) for line in text.split("\n"))
+def _expand_line(template_line, values):
+    """Expand one template line (a value may add more lines). Returns the output lines.
+
+    A comma the template line itself ends with is kept; one left at the end only because a
+    value is empty is removed. Lines inside a multi-line value keep their own commas. A line
+    that becomes empty only because its values are empty is dropped.
+    """
+    lines = _substitute(template_line, values).split("\n")
+    ends_with_comma = template_line.rstrip(" \t").endswith(",")
+    last = len(lines) - 1
+    cleaned = [_cleanup_line(line, ends_with_comma if i == last else True) for i, line in enumerate(lines)]
+    if template_line.strip() and not any(cleaned):
+        return []
+    return cleaned
 
 
 def check_brackets(text):
@@ -98,10 +101,8 @@ def check_brackets(text):
 
 def expand_text(text, values):
     """Expand one text. Returns (expanded_text, warnings)."""
-    result, warnings = _substitute(text, values)
-    result = cleanup_separators(result)
-    warnings += check_brackets(result)
-    return result, warnings
+    result = "\n".join(line for template_line in text.split("\n") for line in _expand_line(template_line, values))
+    return result, _undefined_warnings(text, values) + check_brackets(result)
 
 
 def expand_template(template, values, input_text=None):
