@@ -33,6 +33,8 @@ Restart ComfyUI. No extra Python packages are needed. The built frontend (`web/`
 
 Picks a template from the template library, replaces each `{name}` with its value, and outputs `positive` / `negative`.
 
+<img width="310" height="323" alt="Prompt_Template_1" src="https://github.com/user-attachments/assets/93ed6888-1934-45c2-9e6d-53c10fb376ca" />
+
 1. Add the node and choose a template from the dropdown.
 2. Input fields for the template's variables appear on the node. An empty field counts as an empty string.
 3. The pencil button (Edit) opens the editor, where you can create, duplicate, delete and edit templates. The editor is also available from the "Prompt Templates" tab in the left sidebar.
@@ -46,6 +48,8 @@ Template syntax:
 - Only `{name}` (letters, digits and `_`) is replaced. Other forms such as `{a|b}` and `{{a}}` are left as they are, so you can combine templates with syntaxes like Dynamic Prompts.
 - After replacement, leftover commas, periods and spaces from empty variables are cleaned up.
 - Undefined variables and unclosed brackets produce warnings, not errors.
+
+<img width="736" height="553" alt="Prompt_Template_2" src="https://github.com/user-attachments/assets/4a50831c-e2d8-47e5-91c8-cb353731d8ba" />
 
 Text from another node:
 
@@ -61,8 +65,9 @@ Storage and reproducibility:
 - Turn on `pin_snapshot` to always use the snapshot, even when the library changes.
 
 ### NF Independent Queue
-
 Runs only the upstream part of this node instead of the whole workflow. Useful for regenerating LLM prompts until you like one.
+
+<img width="291" height="414" alt="Independent_Queue_1" src="https://github.com/user-attachments/assets/5945bd94-ba93-40cb-ae1a-691aada3340a" />
 
 1. Connect the output you want to check to the node's `value` input. Any type is accepted.
 2. Press the node's **Run** button. Only the upstream branch runs, and the result is shown on the node. Text gets a Copy button; images are shown as a preview.
@@ -80,6 +85,8 @@ Runs only the upstream part of this node instead of the whole workflow. Useful f
 ### NF Preview Selector
 
 Shows the images as a grid on the node and passes only the selected ones downstream. The queue is not blocked while you choose.
+
+<img width="742" height="640" alt="Preview_Selector_1" src="https://github.com/user-attachments/assets/a4caecf4-5dc5-43fc-b5c6-fbd733be9ab0" />
 
 1. Connect images to `images`. To pick latents as well, also connect `latents`.
 2. Run the workflow, or press the node's **Generate** button, to show the candidates. In review_and_select mode the downstream part stops here.
@@ -99,6 +106,8 @@ Shows the images as a grid on the node and passes only the selected ones downstr
 
 ### NF Empty Latent Image
 
+<img width="248" height="217" alt="Latent1" src="https://github.com/user-attachments/assets/7ba3eb83-7c5a-49c3-bde6-b55b99cad55b" />
+
 Creates an empty latent from a long-side size, an aspect ratio and an orientation. Outputs `latent` and the calculated `width` / `height`.
 
 - `long_side`: size of the long side in pixels
@@ -107,6 +116,8 @@ Creates an empty latent from a long-side size, an aspect ratio and an orientatio
 - `force_multiple_of_64`: round width and height to multiples of 64
 
 ### NF Preset Empty Latent Image
+
+<img width="271" height="199" alt="Latent2" src="https://github.com/user-attachments/assets/20791580-43bc-4466-9940-6e8c58862780" />
 
 Creates an empty latent from a common size preset (SD 1.5, SDXL, HD, Full HD, 4K, Instagram, and more). With `Custom`, the `custom_width` / `custom_height` values are used. Outputs `latent` and the `width` / `height` used.
 
