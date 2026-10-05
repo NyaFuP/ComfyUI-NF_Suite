@@ -1,6 +1,6 @@
 [project]
 name = "nf-suite"
-version = "1.0.1"
+version = "1.0.2"
 description = "ComfyUI custom nodes: Prompt Template, Independent Queue, Preview Selector and Empty Latent helpers."
 license = {file = "LICENSE"}
 requires-python = ">=3.10"
