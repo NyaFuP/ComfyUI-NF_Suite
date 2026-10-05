@@ -208,39 +208,46 @@ def test_expand_template_ignores_values_for_unknown_variables():
     assert "zzz" not in result["positive"]
 
 
-# --- connected `text` input ({input}) ---------------------------------------
+# --- connected link inputs ({input1} / {input2}) ----------------------------
 
-def test_input_text_replaces_input_placeholder():
-    tpl = dict(TEMPLATE, template="{quality}, {input}", negative_prompt="", variables={"quality": "q"})
-    result = expand_template(tpl, {}, input_text="a knight")
+def test_connected_inputs_replace_their_placeholders():
+    tpl = dict(TEMPLATE, template="{quality}, {input1}", negative_prompt="bad, {input2}", variables={"quality": "q"})
+    result = expand_template(tpl, {}, {"input1": "a knight", "input2": "blurry"})
     assert result["positive"] == "q, a knight"
+    assert result["negative"] == "bad, blurry"
     assert codes(result["warnings"]) == []
 
 
-def test_input_text_wins_over_default_and_node_value():
-    tpl = dict(TEMPLATE, template="{input}", negative_prompt="", variables={"input": "default"})
-    assert expand_template(tpl, {"input": "node"}, input_text="linked")["positive"] == "linked"
+def test_inputs_work_in_either_prompt():
+    tpl = dict(TEMPLATE, template="{input2}", negative_prompt="{input1}", variables={})
+    result = expand_template(tpl, {}, {"input1": "a", "input2": "b"})
+    assert (result["positive"], result["negative"]) == ("b", "a")
 
 
-def test_without_input_text_input_is_an_ordinary_variable():
-    tpl = dict(TEMPLATE, template="{input}", negative_prompt="", variables={"input": "default"})
+def test_connected_input_wins_over_default_and_node_value():
+    tpl = dict(TEMPLATE, template="{input1}", negative_prompt="", variables={"input1": "default"})
+    assert expand_template(tpl, {"input1": "node"}, {"input1": "linked"})["positive"] == "linked"
+
+
+def test_unconnected_input_is_an_ordinary_variable():
+    tpl = dict(TEMPLATE, template="{input1}", negative_prompt="", variables={"input1": "default"})
     assert expand_template(tpl, {})["positive"] == "default"
     undefined = dict(tpl, variables={})
     assert codes(expand_template(undefined, {})["warnings"]) == ["undefined_variable"]
 
 
-def test_empty_input_text_is_cleaned_up_like_an_empty_variable():
-    tpl = dict(TEMPLATE, template="{input}, forest", negative_prompt="", variables={})
-    assert expand_template(tpl, {}, input_text="")["positive"] == "forest"
+def test_empty_input_is_cleaned_up_like_an_empty_variable():
+    tpl = dict(TEMPLATE, template="{input1}, forest", negative_prompt="", variables={})
+    assert expand_template(tpl, {}, {"input1": ""})["positive"] == "forest"
 
 
-def test_input_text_containing_braces_is_not_expanded_again():
-    tpl = dict(TEMPLATE, template="{input}", negative_prompt="", variables={"quality": "q"})
-    result = expand_template(tpl, {}, input_text="{quality}")
-    assert result["positive"] == "{quality}"
+def test_input_containing_braces_is_not_expanded_again():
+    tpl = dict(TEMPLATE, template="{input1}", negative_prompt="", variables={"quality": "q"})
+    assert expand_template(tpl, {}, {"input1": "{quality}"})["positive"] == "{quality}"
 
 
-def test_warns_when_connected_text_is_not_used():
-    tpl = dict(TEMPLATE, template="{quality}", negative_prompt="", variables={"quality": "q", "input": ""})
-    result = expand_template(tpl, {}, input_text="a knight")
+def test_warns_when_a_connected_input_is_not_used():
+    tpl = dict(TEMPLATE, template="{input1}", negative_prompt="", variables={"input2": ""})
+    result = expand_template(tpl, {}, {"input1": "a", "input2": "b"})
     assert codes(result["warnings"]) == ["input_unused"]
+    assert result["warnings"][0]["var"] == "input2"

@@ -11,7 +11,7 @@ import logging
 from aiohttp import web
 
 from ...core.errors import BadRequest, NFError, StorageCorrupt
-from .expand import expand_template
+from .expand import INPUT_VARS, expand_template
 from .schema import validate_template
 
 logger = logging.getLogger(__name__)
@@ -113,16 +113,16 @@ def register_routes(routes: web.RouteTableDef, get_library):
     async def expand(request):
         body = await _json_body(request)
         variables = _parse_variables(body)
-        input_text = body.get("input_text")
-        if input_text is not None and not isinstance(input_text, str):
-            raise BadRequest("'input_text' must be a string")
+        inputs = body.get("inputs", {})
+        if not isinstance(inputs, dict) or not all(k in INPUT_VARS and isinstance(v, str) for k, v in inputs.items()):
+            raise BadRequest(f"'inputs' must be an object of strings with keys from {list(INPUT_VARS)}")
         if isinstance(body.get("template"), dict):
             template = validate_template(body["template"])
         elif isinstance(body.get("template_id"), str) and body["template_id"]:
             template, _ = await asyncio.to_thread(get_library().get, body["template_id"])
         else:
             raise BadRequest("Either 'template_id' or 'template' is required")
-        return web.json_response(expand_template(template, variables, input_text=input_text))
+        return web.json_response(expand_template(template, variables, inputs))
 
     @routes.get(PREFIX + "/info")
     @_handle_errors

@@ -27,10 +27,10 @@ def test_run_merges_resolution_and_expansion_warnings():
     assert [w["code"] for w in result["warnings"]] == ["template_missing", "undefined_variable", "unused_variable"]
 
 
-def test_run_replaces_input_with_connected_text():
-    tpl = dict(TPL, template="{a}, {input}")
-    result = run(lookup({"scene": tpl}), "scene", "{}", "", False, "linked")
-    assert result["positive"] == "x, linked"
+def test_run_replaces_inputs_with_connected_text():
+    tpl = dict(TPL, template="{a}, {input1}", negative_prompt="{input2}")
+    result = run(lookup({"scene": tpl}), "scene", "{}", "", False, {"input1": "linked", "input2": "neg"})
+    assert (result["positive"], result["negative"]) == ("x, linked", "neg")
 
 
 def test_run_raises_for_unknown_template():

@@ -40,7 +40,10 @@ function makeNode(values: Partial<Record<string, unknown>> = {}) {
       { name: 'snapshot', value: values.snapshot ?? '' },
       { name: 'pin_snapshot', value: values.pin_snapshot ?? false }
     ],
-    inputs: [{ name: 'text', link: null as number | null }]
+    inputs: [
+      { name: 'input1', link: null as number | null },
+      { name: 'input2', link: null as number | null }
+    ]
   }
   const widget = (name: string) => node.widgets.find((w) => w.name === name)!
   return { node, widget }
@@ -120,12 +123,15 @@ describe('PromptTemplateController', () => {
     expect(widget('snapshot').value).toBe('')
   })
 
-  it('tracks whether the text input is connected', () => {
+  it('tracks which link inputs are connected', () => {
     const { node } = makeNode()
     const c = controllerFor(node)
-    expect(c.state.textConnected).toBe(false)
-    node.inputs[0].link = 7
+    expect(c.state.connectedInputs).toEqual([])
+    node.inputs[1].link = 7
     c.syncConnections()
-    expect(c.state.textConnected).toBe(true)
+    expect(c.state.connectedInputs).toEqual(['input2'])
+    node.inputs[0].link = 8
+    c.syncConnections()
+    expect(c.state.connectedInputs).toEqual(['input1', 'input2'])
   })
 })

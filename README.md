@@ -53,10 +53,11 @@ Template syntax:
 
 Text from another node:
 
-- Connect a STRING output (for example a Text node or an LLM node) to the optional `text` input. Its text replaces `{input}` in the template.
-- While `text` is connected, the node preview shows `‹from input›` in place of `{input}`, and the `input` field (if the template defines one) is greyed out.
-- When `text` is not connected, `{input}` is an ordinary variable: define `input` in the template to give it a default value.
-- If `text` is connected but the template has no `{input}`, the node shows a warning.
+- The node has two optional inputs, `input1` and `input2`. Connect a STRING output (for example a Text node or an LLM node) to one of them, and its text replaces `{input1}` or `{input2}` in the template.
+- `input1` is meant for the positive prompt and `input2` for the negative prompt, but both variables work in either one.
+- While an input is connected, the node preview shows `‹from input1›` (or `‹from input2›`) in its place, and the field of the same name (if the template defines one) is greyed out.
+- When an input is not connected, its variable is an ordinary variable: define `input1` / `input2` in the template to give it a default value.
+- If an input is connected but the template does not use its variable, the node shows a warning.
 
 Storage and reproducibility:
 

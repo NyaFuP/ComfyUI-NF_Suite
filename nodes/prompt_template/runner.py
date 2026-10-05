@@ -2,7 +2,7 @@
 
 All functions take the raw widget values:
     template_id: str, variables_raw: str (JSON), snapshot_raw: str (JSON or ""), pin_snapshot: bool
-and, for run(), `text`: the connected `text` input or None.
+and, for run(), `inputs`: {link input name: text} for the connected input1 / input2.
 and `lookup`: callable(template_id) -> template dict or None.
 """
 
@@ -21,10 +21,10 @@ def _resolve(lookup, template_id, variables_raw, snapshot_raw, pin_snapshot):
     return resolution, variables
 
 
-def run(lookup, template_id, variables_raw, snapshot_raw, pin_snapshot, text=None):
+def run(lookup, template_id, variables_raw, snapshot_raw, pin_snapshot, inputs=None):
     """Return {"positive", "negative", "warnings", "source"}. Raises NFError when not runnable."""
     resolution, variables = _resolve(lookup, template_id, variables_raw, snapshot_raw, pin_snapshot)
-    expanded = expand_template(resolution.template, variables, input_text=text)
+    expanded = expand_template(resolution.template, variables, inputs)
     return {
         "positive": expanded["positive"],
         "negative": expanded["negative"],

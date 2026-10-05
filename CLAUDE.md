@@ -151,13 +151,14 @@ NF_Suite/
   - 2つ以上の空白は1つにする。カンマの前の空白、および直後が空白か行末のピリオドの前の空白は削除する
   - `1.2` のような小数や `(word:1.2)` の重みは変化しない。`...` は `.` に詰まる
 - 未定義の変数(そのまま残す)、未使用の変数、`()` `[]` `{}` の閉じ忘れは、エラーにせず警告を返す
-- 他ノードとつなぐ入力口は `text`(STRING、入力口のみ、任意)の1つだけ(2026-10-02、ユーザー判断で変更。以前は「入力口は作らない」)。つながっているときは、その文字列で予約変数 `{input}` を置き換え、テンプレートのデフォルトやノードの入力欄より優先する。つながっていなければ `input` は普通の変数として扱う。つながっているのに `{input}` がなければ警告 `input_unused`
-  - `fingerprint_inputs` には `text` を入れない(本体はリンクの値を渡さない。上流が変われば本体のキャッシュキーが変わる)
-  - ノードのプレビューは、`/expand` に `input_text: '‹from input›'` を渡して表示する。変数 `input` の入力欄はグレーアウトする
-  - 予約名は `expand.py` の `INPUT_VAR` と `types.ts` の `INPUT_VAR` の2か所。変えるときは両方を直す
+- 他ノードとつなぐ入力口は `input1` と `input2`(STRING、入力口のみ、任意)の2つ(2026-10-05、ユーザー判断。2026-10-02 に `text` / `{input}` の1つで追加し、2つに変えた。互換の処理は入れていない)。つながっている入力口は、同じ名前の変数 `{input1}` / `{input2}` を置き換え、テンプレートのデフォルトやノードの入力欄より優先する。つながっていなければ普通の変数として扱う。つながっているのに同じ名前の変数がテンプレートになければ警告 `input_unused`(`var` に名前)
+  - `input1` はポジティブ用、`input2` はネガティブ用という**目安**(ツールチップは付けない。ユーザー判断)。どちらの変数もポジティブ・ネガティブのどちらのテンプレートでも置き換える(ユーザー判断)
+  - `fingerprint_inputs` には入力口の値を入れない(本体はリンクの値を渡さない。上流が変われば本体のキャッシュキーが変わる)
+  - ノードのプレビューは、`/expand` に `inputs: {input1: '‹from input1›', …}`(つながっているものだけ)を渡して表示する。同じ名前の変数の入力欄はグレーアウトする
+  - 名前の一覧は `expand.py` の `INPUT_VARS` と `types.ts` の `INPUT_VARS` の2か所。入力口の名前(`node.py`)も同じにする。変えるときはすべて直す
 
 ### ノードの入力と状態
-- 入力はプレーンなウィジェット:`template_id`(STRING)、`variables`(STRING/JSON)、`snapshot`(STRING/JSON、空可)、`pin_snapshot`(BOOLEAN)、任意の入力口 `text`(STRING)。出力は `positive` と `negative`(STRING)
+- 入力はプレーンなウィジェット:`template_id`(STRING)、`variables`(STRING/JSON)、`snapshot`(STRING/JSON、空可)、`pin_snapshot`(BOOLEAN)、任意の入力口 `input1` / `input2`(STRING)。出力は `positive` と `negative`(STRING)
 - フロントはこれらを `hidden` にし、`serialize:false` のDOMウィジェット(Vue)で編集する。拡張JSが壊れても素のテキスト欄として動くようにするため
 - 変数の入力欄は本物のウィジェットとして増減させず、`VariableFields` が描画して `variables` JSONに書き込む
 - `fingerprint_inputs` は、実際に使うテンプレート内容+`variables` のハッシュを返す(外部JSONの変更で再実行させる)
@@ -183,7 +184,7 @@ NF_Suite/
 | `POST /templates` | `{template, base_revision}` | 201 `{template, revision}` / 409 |
 | `PUT /templates/{id}` | `{template, base_revision}` | 200 `{template, revision}` / 404 / 409 |
 | `DELETE /templates/{id}` | `?base_revision=` | 200 `{revision}` / 404 / 409 |
-| `POST /expand` | `{template_id? または template?, variables}` | `{positive, negative, warnings:[{code, message, var?}]}` |
+| `POST /expand` | `{template_id? または template?, variables, inputs?}` | `{positive, negative, warnings:[{code, message, var?}]}` |
 | `GET /info` | — | `{api_version, storage_path, readonly, load_error?}` |
 
 - エラーは `{error:{code, message, details?}}`。code:`BAD_REQUEST`(400) `NOT_FOUND`(404) `CONFLICT` / `DUPLICATE_ID`(409) `INVALID_TEMPLATE` / `INVALID_LIBRARY`(422) `LIBRARY_CORRUPT`(503) `INTERNAL_ERROR`(500)

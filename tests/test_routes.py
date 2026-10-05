@@ -79,9 +79,9 @@ def test_expand_inline_template(lib_path):
     assert [w["code"] for w in body["warnings"]] == ["undefined_variable", "unused_variable"]
 
 
-def test_expand_with_input_text(lib_path):
-    inline = dict(TPL, id="draft", template="{a}, {input}")
-    status, body = call(lib_path, "POST", "/expand", json={"template": inline, "variables": {}, "input_text": "linked"})
+def test_expand_with_inputs(lib_path):
+    inline = dict(TPL, id="draft", template="{a}, {input1}")
+    status, body = call(lib_path, "POST", "/expand", json={"template": inline, "variables": {}, "inputs": {"input1": "linked"}})
     assert status == 200
     assert body["positive"] == "x, linked"
 
@@ -101,7 +101,9 @@ def test_expand_invalid_inline_template_is_422(lib_path):
     {},
     {"template_id": "scene", "variables": {"a": 1}},
     {"template_id": "scene", "variables": "nope"},
-    {"template_id": "scene", "variables": {}, "input_text": 1},
+    {"template_id": "scene", "variables": {}, "inputs": {"input1": 1}},
+    {"template_id": "scene", "variables": {}, "inputs": {"text": "x"}},
+    {"template_id": "scene", "variables": {}, "inputs": "x"},
 ])
 def test_expand_bad_request(lib_path, payload):
     status, body = call(lib_path, "POST", "/expand", json=payload)

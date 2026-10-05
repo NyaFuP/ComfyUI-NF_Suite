@@ -9,15 +9,15 @@ import { type ComfyNode, fitNodeHeight, getWidgetValue, isInputConnected, setWid
 
 import { findTemplate } from './libraryStore'
 import { buildSnapshot, parseSnapshot, parseVariables, sameContent } from './logic'
-import { type Snapshot, TEXT_INPUT, WIDGET } from './types'
+import { INPUT_VARS, type Snapshot, WIDGET } from './types'
 
 export interface NodeState {
   templateId: string
   variables: Record<string, string>
   snapshot: Snapshot | null
   pinned: boolean
-  /** The `text` input is linked, so {input} comes from another node. */
-  textConnected: boolean
+  /** Link inputs (input1 / input2) that are connected: their variables come from other nodes. */
+  connectedInputs: string[]
 }
 
 export class PromptTemplateController {
@@ -29,7 +29,7 @@ export class PromptTemplateController {
       variables: {},
       snapshot: null,
       pinned: false,
-      textConnected: false
+      connectedInputs: []
     })
     this.syncFromWidgets()
   }
@@ -43,7 +43,7 @@ export class PromptTemplateController {
   }
 
   syncConnections(): void {
-    this.state.textConnected = isInputConnected(this.node, TEXT_INPUT)
+    this.state.connectedInputs = INPUT_VARS.filter((name) => isInputConnected(this.node, name))
   }
 
   /** Select a template: reset variable values to its defaults and capture a snapshot. */

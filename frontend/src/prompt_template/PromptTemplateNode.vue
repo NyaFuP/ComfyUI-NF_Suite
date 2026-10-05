@@ -67,8 +67,8 @@ const notice = computed(() => {
 
 // --- preview (expanded by the backend) -----------------------------------------
 
-/** Shown for {input} while the `text` input is linked (its value is only known at run time). */
-const INPUT_MARKER = '‹from input›'
+/** Shown for {input1} / {input2} while that input is linked (its value is only known at run time). */
+const inputMarkers = () => Object.fromEntries(state.connectedInputs.map((name) => [name, `‹from ${name}›`]))
 
 const preview = ref<ExpandResponse | null>(null)
 const previewError = ref<string | null>(null)
@@ -94,7 +94,7 @@ async function updatePreview() {
       body: JSON.stringify({
         template,
         variables: state.variables,
-        input_text: state.textConnected ? INPUT_MARKER : null
+        inputs: inputMarkers()
       })
     })
     if (seq !== requestSeq) return
@@ -108,7 +108,7 @@ async function updatePreview() {
   props.controller.fit()
 }
 
-watch(() => [resolved.value.template, state.variables, state.textConnected], schedulePreview, {
+watch(() => [resolved.value.template, state.variables, state.connectedInputs], schedulePreview, {
   immediate: true,
   deep: true
 })
@@ -165,7 +165,7 @@ function onWheel(event: WheelEvent) {
       v-if="resolved.template"
       :defaults="resolved.template.variables"
       :values="state.variables"
-      :text-connected="state.textConnected"
+      :connected-inputs="state.connectedInputs"
       @update="(name, value) => controller.setVariable(name, value)"
       @reset="(name) => controller.resetVariable(name)"
     />

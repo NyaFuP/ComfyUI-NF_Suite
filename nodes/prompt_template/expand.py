@@ -13,9 +13,10 @@ import re
 # Keep in sync with PLACEHOLDER_RE in frontend/src/prompt_template/editorForm.ts.
 PLACEHOLDER_RE = re.compile(r"(?<!\{)\{([A-Za-z_][A-Za-z0-9_]*)\}(?!\})")
 
-# Variable replaced by the node's `text` input when it is connected.
-# Keep in sync with INPUT_VAR in frontend/src/prompt_template/types.ts.
-INPUT_VAR = "input"
+# Variables replaced by the node's link inputs of the same name when they are connected
+# (input1 is meant for the positive prompt, input2 for the negative; both work in either).
+# Keep in sync with INPUT_VARS in frontend/src/prompt_template/types.ts.
+INPUT_VARS = ("input1", "input2")
 
 # A run of 2+ separators, possibly with spaces/tabs between them.
 _SEPARATOR_RUN_RE = re.compile(r"[,.](?:[ \t]*[,.])+")
@@ -105,18 +106,19 @@ def expand_text(text, values):
     return result, _undefined_warnings(text, values) + check_brackets(result)
 
 
-def expand_template(template, values, input_text=None):
+def expand_template(template, values, inputs=None):
     """Expand a template dict with node-provided values.
 
     Values come from the node; a variable missing from `values` falls back to the
     template default. Values for names the template does not define are ignored.
-    `input_text` (the connected `text` input, or None) replaces `{input}` and wins over both.
+    `inputs` maps each connected link input (a name in INPUT_VARS) to its text; it replaces
+    the variable of the same name and wins over both.
     Returns {"positive", "negative", "warnings"}.
     """
+    inputs = inputs or {}
     defaults = template.get("variables") or {}
     merged = {name: values.get(name, default) for name, default in defaults.items()}
-    if input_text is not None:
-        merged[INPUT_VAR] = input_text
+    merged.update(inputs)
 
     positive, pos_warnings = expand_text(template.get("template", ""), merged)
     negative, neg_warnings = expand_text(template.get("negative_prompt", ""), merged)
@@ -126,12 +128,14 @@ def expand_template(template, values, input_text=None):
 
     used = set(PLACEHOLDER_RE.findall(template.get("template", "")))
     used |= set(PLACEHOLDER_RE.findall(template.get("negative_prompt", "")))
-    connected = input_text is not None
     warnings += [
         _warning("unused_variable", f"Variable '{name}' is not used", var=name)
         for name in defaults
-        if name not in used and not (connected and name == INPUT_VAR)
+        if name not in used and name not in inputs
     ]
-    if connected and INPUT_VAR not in used:
-        warnings.append(_warning("input_unused", "The connected text is not used: the template has no {input}"))
+    warnings += [
+        _warning("input_unused", f"The connected {name} is not used: the template has no {{{name}}}", var=name)
+        for name in inputs
+        if name not in used
+    ]
     return {"positive": positive, "negative": negative, "warnings": warnings}
