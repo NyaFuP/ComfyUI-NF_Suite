@@ -10,14 +10,13 @@ import logging
 
 from aiohttp import web
 
-from ...core.errors import BadRequest, NFError, StorageCorrupt
+from ...core.errors import BadRequest, NFError
 from .expand import INPUT_VARS, expand_template
 from .schema import validate_template
 
 logger = logging.getLogger(__name__)
 
 PREFIX = "/nyafu/prompt_template"
-API_VERSION = 1
 
 
 def _error_response(error: NFError):
@@ -43,7 +42,7 @@ async def _json_body(request):
     try:
         body = await request.json()
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
-        raise BadRequest(f"Request body must be JSON: {e}") from e
+        raise BadRequest("Request body must be JSON") from e
     if not isinstance(body, dict):
         raise BadRequest("Request body must be a JSON object")
     return body
@@ -123,15 +122,3 @@ def register_routes(routes: web.RouteTableDef, get_library):
         else:
             raise BadRequest("Either 'template_id' or 'template' is required")
         return web.json_response(expand_template(template, variables, inputs))
-
-    @routes.get(PREFIX + "/info")
-    @_handle_errors
-    async def info(request):
-        library = get_library()
-        result = {"api_version": API_VERSION, "storage_path": library.path, "readonly": False}
-        try:
-            await asyncio.to_thread(library.list)
-        except StorageCorrupt as e:
-            result["readonly"] = True
-            result["load_error"] = e.to_dict()["error"]
-        return web.json_response(result)

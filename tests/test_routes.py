@@ -116,18 +116,15 @@ def test_expand_non_json_body_is_400(lib_path):
     assert status == 400
 
 
-def test_info(lib_path):
-    status, body = call(lib_path, "GET", "/info")
-    assert status == 200
-    assert body["api_version"] == 1
-    assert body["storage_path"] == str(lib_path)
-    assert body["readonly"] is False
-    assert "load_error" not in body
+@pytest.mark.parametrize("content", ["{ broken", '{"version": 1, "templates": "nope"}'])
+def test_corrupt_library_error_does_not_reveal_the_path(lib_path, content):
+    lib_path.write_text(content, encoding="utf-8")
+    status, body = call(lib_path, "GET", "/templates")
+    assert status == 503
+    assert str(lib_path.parent) not in json.dumps(body)
+    assert lib_path.name not in json.dumps(body)
 
 
-def test_info_reports_corrupt_library_as_readonly(lib_path):
-    lib_path.write_text("{ broken", encoding="utf-8")
-    status, body = call(lib_path, "GET", "/info")
-    assert status == 200
-    assert body["readonly"] is True
-    assert body["load_error"]["code"] == "LIBRARY_CORRUPT"
+def test_bad_json_body_error_has_no_parser_details(lib_path):
+    _, body = call(lib_path, "POST", "/expand", data="{ not json")
+    assert body["error"]["message"] == "Request body must be JSON"

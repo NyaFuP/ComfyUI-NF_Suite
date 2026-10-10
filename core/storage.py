@@ -9,12 +9,15 @@
 
 import hashlib
 import json
+import logging
 import os
 import tempfile
 import threading
 import time
 
 from .errors import Conflict, InvalidData, StorageCorrupt
+
+logger = logging.getLogger(__name__)
 
 _REPLACE_RETRIES = 5
 _REPLACE_RETRY_DELAY = 0.05
@@ -71,17 +74,20 @@ class JsonDocumentStore:
             raw = f.read()
         try:
             data = json.loads(raw.decode("utf-8-sig"))
+        # The message reaches HTTP clients, so the path and parser details only go to the server log.
         except (UnicodeDecodeError, json.JSONDecodeError) as e:
+            logger.error("[NF_Suite] Cannot parse %s: %s", self.path, e)
             raise StorageCorrupt(
-                f"Cannot parse {self.path}: {e}", code=self._corrupt_code, details={"path": self.path}
+                "The stored file is not valid JSON. See the ComfyUI log for details.", code=self._corrupt_code
             ) from e
         try:
             doc = self._validator(data)
         except InvalidData as e:
+            logger.error("[NF_Suite] Invalid content in %s: %s", self.path, e.message)
             raise StorageCorrupt(
-                f"Invalid content in {self.path}: {e.message}",
+                f"The stored file has invalid content: {e.message}",
                 code=self._corrupt_code,
-                details={"path": self.path, "reason": e.to_dict()["error"]},
+                details={"reason": e.to_dict()["error"]},
             ) from e
         return doc, _revision_of(raw)
 

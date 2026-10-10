@@ -42,7 +42,7 @@ def parse_variables(raw):
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as e:
-        raise InvalidData(f"'variables' is not valid JSON: {e}", code="INVALID_VARIABLES") from e
+        raise InvalidData("'variables' is not valid JSON", code="INVALID_VARIABLES") from e
     if not isinstance(data, dict) or not all(isinstance(v, str) for v in data.values()):
         raise InvalidData("'variables' must be a JSON object of strings", code="INVALID_VARIABLES")
     return data
@@ -55,7 +55,7 @@ def parse_snapshot(raw):
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as e:
-        raise InvalidData(f"'snapshot' is not valid JSON: {e}", code="INVALID_SNAPSHOT") from e
+        raise InvalidData("'snapshot' is not valid JSON", code="INVALID_SNAPSHOT") from e
     try:
         return validate_template(data)
     except InvalidData as e:

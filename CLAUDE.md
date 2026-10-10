@@ -185,10 +185,10 @@ NF_Suite/
 | `PUT /templates/{id}` | `{template, base_revision}` | 200 `{template, revision}` / 404 / 409 |
 | `DELETE /templates/{id}` | `?base_revision=` | 200 `{revision}` / 404 / 409 |
 | `POST /expand` | `{template_id? または template?, variables, inputs?}` | `{positive, negative, warnings:[{code, message, var?}]}` |
-| `GET /info` | — | `{api_version, storage_path, readonly, load_error?}` |
 
 - エラーは `{error:{code, message, details?}}`。code:`BAD_REQUEST`(400) `NOT_FOUND`(404) `CONFLICT` / `DUPLICATE_ID`(409) `INVALID_TEMPLATE` / `INVALID_LIBRARY`(422) `LIBRARY_CORRUPT`(503) `INTERNAL_ERROR`(500)
 - ノードの検証・実行時のエラーコード:`NO_TEMPLATE` `SNAPSHOT_MISSING` `INVALID_VARIABLES` `INVALID_SNAPSHOT`。警告コード:`undefined_variable` `unused_variable` `unbalanced_bracket` `snapshot_outdated` `template_missing` `library_unavailable` `input_unused`
+- **APIの応答(エラーを含む)に、サーバーの絶対パスや例外の生の文言を入れない**(2026-10-10。Comfy Registry の人による審査で 1.0.0〜1.0.2 が `policy-v0.5: information-disclosure` として Flagged になったため)。パスや詳しい原因はサーバーのログ(`logger`)にだけ出す。以前あった `GET /info`(保存先の絶対パスを返していた。フロントは未使用)は削除した
 - 全エンドポイントを実装済み(書き込み系はエディタのフェーズで追加)。`base_revision` がないと400。DELETEはクエリ `?base_revision=` で渡す
 - フロントの書き込み(`libraryStore` の createTemplate / updateTemplate / deleteTemplate)は、常に手元の `library.revision` を送る。409のときはライブラリを読み直してからエラーを投げる(フォームの編集内容は残り、もう一度保存すると新しいrevisionで送られる)
 - 複製専用のAPIは作らない(フロントでコピーしてPOST)
@@ -324,7 +324,7 @@ NF_Tools の `NFPreviewSelector2` をNF_Suiteに統合し、待機方式を部�
 ## 最小構成の実装手順(M0〜M2)
 
 - M0(**完了** 2026-09-29):`pyproject.toml`、`.gitignore` を用意(`git init` と `web/` のコミットは 2026-10-01 に実施)
-- M1(**完了** 2026-09-29。pytest 128件、実機でノード実行を確認済み。Pythonのみ):`storage.py` `expand.py` `schema.py` とpytest → 読み取り系API(`GET /templates` `GET /templates/{id}` `POST /expand` `GET /info`)→ V3ノード本体(この段階ではSTRINGウィジェットがそのまま見える)
+- M1(**完了** 2026-09-29。pytest 128件、実機でノード実行を確認済み。Pythonのみ):`storage.py` `expand.py` `schema.py` とpytest → 読み取り系API(`GET /templates` `GET /templates/{id}` `POST /expand`。`GET /info` は 2026-10-10 に削除)→ V3ノード本体(この段階ではSTRINGウィジェットがそのまま見える)
 - M2(**完了** 2026-09-30。Nodes 2.0とLiteGraphの両方で実機確認済み。vitest 32件):冒頭でPrimeVue unstyledの共存を確認するスパイク → Viteの1ファイルビルド → `PromptTemplateNode`(ドロップダウン、プレビュー、Reload)→ snapshotの自動更新。Editは次のフェーズ
 - Template Editor(**完了** 2026-09-30。pytest 147件、vitest 59件、実機確認済み):書き込みAPI → エディタのフォームのロジック → `TemplateEditor.vue` → モーダルとサイドバー
 
