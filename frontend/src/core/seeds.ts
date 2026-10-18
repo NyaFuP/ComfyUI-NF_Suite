@@ -39,6 +39,11 @@ export interface SeedNode {
   } | null
   /** Set on subgraph nodes. */
   subgraph?: { nodes: SeedNode[] }
+  /** Frontend-only nodes (e.g. KJNodes Set/Get) and how the host resolves their outputs. */
+  isVirtualNode?: boolean
+  outputs?: unknown[]
+  resolveVirtualOutput?(slot: number): { node: SeedNode } | null | undefined
+  getInputLink?(slot: number): { origin_id: number | string } | null | undefined
 }
 
 export interface SeedChange {
@@ -61,6 +66,9 @@ function isControlWidget(widget: unknown): widget is ControlWidget {
  * upstream subgraphs. Links are resolved through the node's graph like the base
  * LGraphNode.getInputLink: SubgraphNode overrides getInputNode/getInputLink to look inside
  * the subgraph, which throws "reading 'getLinks'" for most input slots (frontend 1.53.6).
+ *
+ * Virtual nodes such as KJNodes Get have no input links; their source is found the way the
+ * host's ExecutableNodeDTO.resolveOutput does it: resolveVirtualOutput(slot), then getInputLink(slot).
  */
 export function collectUpstream(start: SeedNode): SeedNode[] {
   const seen = new Set<SeedNode>([start])
@@ -78,6 +86,17 @@ export function collectUpstream(start: SeedNode): SeedNode[] {
       if (input.link == null) continue
       const link = current.graph?.getLink(input.link)
       if (link) visit(current.graph?.getNodeById(link.origin_id))
+    }
+    if (current.isVirtualNode) {
+      for (let slot = 0; slot < (current.outputs?.length ?? 0); slot++) {
+        const source = current.resolveVirtualOutput?.(slot)
+        if (source) {
+          visit(source.node)
+          continue
+        }
+        const link = current.getInputLink?.(slot)
+        if (link) visit(current.graph?.getNodeById(link.origin_id))
+      }
     }
     current.subgraph?.nodes.forEach(visit)
   }

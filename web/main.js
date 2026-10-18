@@ -8866,6 +8866,16 @@ function xg(e) {
       const l = r.graph?.getLink(s.link);
       l && o(r.graph?.getNodeById(l.origin_id));
     }
+    if (r.isVirtualNode)
+      for (let s = 0; s < (r.outputs?.length ?? 0); s++) {
+        const l = r.resolveVirtualOutput?.(s);
+        if (l) {
+          o(l.node);
+          continue;
+        }
+        const a = r.getInputLink?.(s);
+        a && o(r.graph?.getNodeById(a.origin_id));
+      }
     r.subgraph?.nodes.forEach(o);
   }
   return n;

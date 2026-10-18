@@ -79,6 +79,39 @@ describe('collectUpstream', () => {
     root.nodes.set(2, sub)
     expect(collectUpstream(node(3, [], [sub])).map((n) => n.id).sort()).toEqual([1, 2, 20, 21, 30])
   })
+
+  it('follows virtual nodes without input links, like KJNodes Get, through getInputLink', () => {
+    // Seed -> Set ~~(by name)~~ Get -> sampler -> start
+    const seed = node(1)
+    const setter = node(2, [], [seed])
+    const getter: SeedNode = {
+      id: 3,
+      graph: root,
+      isVirtualNode: true,
+      outputs: [{}],
+      getInputLink: (slot) => (slot === 0 ? { origin_id: setter.id } : null)
+    }
+    root.nodes.set(3, getter)
+    const sampler = node(4, [], [getter])
+    expect(collectUpstream(node(5, [], [sampler])).map((n) => n.id).sort()).toEqual([1, 2, 3, 4])
+  })
+
+  it('prefers resolveVirtualOutput for virtual nodes (cross-graph KJNodes Get)', () => {
+    const outer = makeGraph()
+    const seed = node(1, [], [], outer)
+    const getter: SeedNode = {
+      id: 3,
+      graph: root,
+      isVirtualNode: true,
+      outputs: [{}],
+      resolveVirtualOutput: () => ({ node: seed }),
+      getInputLink: () => {
+        throw new Error('must not be called when resolveVirtualOutput resolves')
+      }
+    }
+    root.nodes.set(3, getter)
+    expect(collectUpstream(node(5, [], [getter])).map((n) => n.id).sort()).toEqual([1, 3])
+  })
 })
 
 describe('controlledNumberWidgets', () => {
