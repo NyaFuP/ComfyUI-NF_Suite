@@ -354,6 +354,7 @@ NF_Tools の `NFPreviewSelector2` をNF_Suiteに統合し、待機方式を部�
 - UIの文言は英語で確定
 - Git:2026-10-01 に `git init`。`web/`(`main.js` / `main.css` / `main.js.map`)もコミットする(git clone や ComfyUI Manager からのインストールでビルドなしに動かすため)。**フロントのソースを変えたら、`npm test` と `npm run build` を通してから、`frontend/src` と `web/` を同じコミットに入れること**
 - 起動:開発時は `python main.py --port 8189`(venvを有効にして)。普段は `start.bat`(ポート8188、`--enable-manager`)
+- Comfy Registry への公開(2026-10-19、ユーザー判断):`pyproject.toml` の `version` を上げて master に push すると、GitHub Actions が自動で公開する。新しいバージョンは毎回 Flagged になる(同梱した Vue/PrimeVue の `.bind(` などの info 検出。避けられない)ので、**普段の修正は push だけにして version は上げない**。修正がたまったら、ユーザーに確認してからまとめて version を上げる。Flagged になったら、Comfy-Org/registry-backend にレビュー依頼の Issue を出す(文面はユーザーに見せてから `gh` で投稿)。検出内容は `https://api.comfy.org/nodes/nf-suite/versions?include_status_reason=true` で確認できる。version を上げたら、タグ `vX.Y.Z` と GitHub のリリースも作る
 
 ## 既知のリスク
 

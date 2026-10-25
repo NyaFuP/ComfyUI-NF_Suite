@@ -1,7 +1,7 @@
 [project]
 name = "nf-suite"
 version = "1.0.4"
-description = "ComfyUI custom nodes: Prompt Template, Independent Queue, Preview Selector and Empty Latent helpers."
+description = "NF Suite adds workflow helpers to ComfyUI. Prompt Template turns your prompts into reusable templates: pick one, fill in its {variables} on the node, and get positive and negative prompts. Templates are edited in a built-in editor, and text from other nodes such as an LLM can fill {input1} and {input2}. Preview Selector shows a batch of images as a grid on the node; pick the ones you like and press Continue to run only the downstream part with them. Also includes Independent Queue and Empty Latent helpers."
 license = {file = "LICENSE"}
 requires-python = ">=3.10"
 dependencies = []
