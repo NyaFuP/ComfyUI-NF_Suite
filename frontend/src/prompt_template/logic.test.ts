@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildSnapshot, groupTemplates, parseSnapshot, parseVariables, resolveTemplate, sameContent } from './logic'
+import {
+  buildSnapshot,
+  filterGroups,
+  foldGroups,
+  groupOf,
+  groupTemplates,
+  parseSnapshot,
+  parseVariables,
+  resolveTemplate,
+  sameContent
+} from './logic'
 import type { Snapshot, Template } from './types'
 
 const TPL: Template = {
@@ -80,17 +90,72 @@ describe('buildSnapshot', () => {
 })
 
 describe('groupTemplates', () => {
-  it('groups by category in first-seen order, empty category last as Uncategorized', () => {
-    const t = (id: string, category: string) => ({ ...TPL, id, name: id.toUpperCase(), category })
-    expect(groupTemplates([t('a', 'Scene'), t('b', ''), t('c', 'Char'), t('d', 'Scene')])).toEqual([
-      { label: 'Scene', items: [{ id: 'a', name: 'A' }, { id: 'd', name: 'D' }] },
-      { label: 'Char', items: [{ id: 'c', name: 'C' }] },
-      { label: 'Uncategorized', items: [{ id: 'b', name: 'B' }] }
+  const t = (id: string, name: string, category: string) => ({ ...TPL, id, name, category })
+
+  it('sorts categories and the templates in each by name, empty category last as Uncategorized', () => {
+    expect(
+      groupTemplates([t('a', 'Zoo', 'Scene'), t('b', 'Misc', ''), t('c', 'Hero', 'Char'), t('d', 'Alley', 'Scene')])
+    ).toEqual([
+      { label: 'Char', items: [{ id: 'c', name: 'Hero' }] },
+      { label: 'Scene', items: [{ id: 'd', name: 'Alley' }, { id: 'a', name: 'Zoo' }] },
+      { label: 'Uncategorized', items: [{ id: 'b', name: 'Misc' }] }
+    ])
+  })
+
+  it('ignores case when sorting', () => {
+    const groups = groupTemplates([t('a', 'beta', 'scene'), t('b', 'Alpha', 'Scene'), t('c', 'x', 'Char')])
+    expect(groups.map((g) => g.label)).toEqual(['Char', 'scene', 'Scene'])
+    expect(groupTemplates([t('a', 'beta', 'S'), t('b', 'Alpha', 'S')])[0].items.map((i) => i.name)).toEqual([
+      'Alpha',
+      'beta'
     ])
   })
 
   it('returns no groups for no templates', () => {
     expect(groupTemplates([])).toEqual([])
+  })
+})
+
+describe('foldGroups', () => {
+  const groups = [
+    { label: 'Char', items: [{ id: 'c', name: 'Hero' }] },
+    { label: 'Uncategorized', items: [{ id: 'b', name: 'Misc' }] }
+  ]
+
+  it('empties the groups that are not expanded, keeping their headers', () => {
+    expect(foldGroups(groups, new Set(['Char']), false)).toEqual([
+      groups[0],
+      { label: 'Uncategorized', items: [] }
+    ])
+  })
+
+  it('shows every group while filtering', () => {
+    expect(foldGroups(groups, new Set(), true)).toEqual(groups)
+  })
+})
+
+describe('filterGroups', () => {
+  const groups = [
+    { label: 'Char', items: [{ id: 'c', name: 'Hero' }, { id: 'a', name: 'Archer' }] },
+    { label: 'Scene', items: [{ id: 's', name: 'Forest' }] }
+  ]
+
+  it('keeps templates whose name contains the text, ignoring case, and drops empty groups', () => {
+    expect(filterGroups(groups, 'ER')).toEqual([{ label: 'Char', items: [{ id: 'c', name: 'Hero' }, { id: 'a', name: 'Archer' }] }])
+    expect(filterGroups(groups, 'for')).toEqual([{ label: 'Scene', items: [{ id: 's', name: 'Forest' }] }])
+  })
+
+  it('returns the groups unchanged for blank text', () => {
+    expect(filterGroups(groups, '  ')).toBe(groups)
+  })
+})
+
+describe('groupOf', () => {
+  it('returns the label of the group that holds the template', () => {
+    const groups = [{ label: 'Char', items: [{ id: 'c', name: 'Hero' }] }]
+    expect(groupOf(groups, 'c')).toBe('Char')
+    expect(groupOf(groups, 'x')).toBeUndefined()
+    expect(groupOf(groups, null)).toBeUndefined()
   })
 })
 

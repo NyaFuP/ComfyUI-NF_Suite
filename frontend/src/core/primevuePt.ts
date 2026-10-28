@@ -16,16 +16,6 @@ export const primeVuePassThrough = {
     option: { class: 'nf-overlay-option' },
     emptyMessage: { class: 'nf-overlay-empty' }
   },
-  listbox: {
-    root: { class: 'nf-listbox' },
-    header: { class: 'nf-listbox-header' },
-    pcFilter: { root: { class: 'nf-input' } },
-    listContainer: { class: 'nf-listbox-list-container' },
-    list: { class: 'nf-overlay-list' },
-    optionGroup: { class: 'nf-overlay-group' },
-    option: { class: 'nf-overlay-option' },
-    emptyMessage: { class: 'nf-overlay-empty' }
-  },
   inputtext: {
     root: { class: 'nf-input' }
   },

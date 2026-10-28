@@ -8,6 +8,8 @@ import { ApiError, requestJson } from '@/core/apiClient'
 import type { PromptTemplateController } from './controller'
 import { ensureLibraryLoaded, findTemplate, library, loadLibrary } from './libraryStore'
 import { openTemplateEditor } from './editorModal'
+import { useFoldedGroups } from './foldedGroups'
+import GroupToggle from './GroupToggle.vue'
 import { groupTemplates, type ResolveNotice, resolveTemplate } from './logic'
 import { API_PREFIX, type ExpandResponse } from './types'
 import VariableFields from './VariableFields.vue'
@@ -20,6 +22,9 @@ const state = props.controller.state
 const groupedOptions = computed(() => groupTemplates(library.templates))
 
 const selectedId = computed(() => (findTemplate(state.templateId) ? state.templateId : null))
+
+// Folded categories; reset to "only the selected category open" each time the dropdown opens.
+const folded = useFoldedGroups(groupedOptions, selectedId)
 
 const placeholder = computed(() => {
   if (!state.templateId) return 'Select a template'
@@ -133,17 +138,33 @@ function onWheel(event: WheelEvent) {
       <Select
         class="nf-grow"
         :model-value="selectedId"
-        :options="groupedOptions"
+        :options="folded.options.value"
         option-label="name"
         option-value="id"
         option-group-label="label"
         option-group-children="items"
         :placeholder="placeholder"
         :filter="library.templates.length > 8"
+        reset-filter-on-hide
         :loading="library.loading"
         append-to="body"
+        @before-show="folded.reset()"
+        @filter="folded.onFilter"
         @update:model-value="onSelect"
-      />
+      >
+        <!-- The selected template may sit in a folded group, so the label is looked up here. -->
+        <template #value="{ value, placeholder: empty }">
+          {{ (value && findTemplate(value)?.name) || empty }}
+        </template>
+        <template #optiongroup="{ option }">
+          <GroupToggle
+            :label="option.label"
+            :count="folded.counts.value.get(option.label) ?? 0"
+            :expanded="folded.isExpanded(option.label)"
+            @toggle="folded.toggle(option.label)"
+          />
+        </template>
+      </Select>
       <Button
         class="nf-icon-button"
         icon="pi pi-refresh"

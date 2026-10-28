@@ -208,13 +208,14 @@ NF_Suite/
 - UIの文言は英語(ComfyUI本体に合わせる)
 
 ### Template Editor
-- 左に一覧(PrimeVue Listbox:カテゴリ別、検索付き)、右にフォーム。フォームは名前、カテゴリ(既存カテゴリの候補付き)、ID(表示のみ。初回保存時にサーバーが名前から付ける)、テンプレート、negative、変数の表(名前/デフォルト/削除)、プレビュー(デフォルト値で展開)
+- 左に一覧(自作の `TemplateList.vue`:カテゴリ別、検索付き)、右にフォーム。フォームは名前、カテゴリ(既存カテゴリの候補付き)、ID(表示のみ。初回保存時にサーバーが名前から付ける)、テンプレート、negative、変数の表(名前/デフォルト/削除)、プレビュー(デフォルト値で展開)
 - 操作:New、Duplicate(保存済みの内容をコピー。IDなしで新規作成)、Delete(確認あり)、Save(Ctrl+Sでも可)、Revert、Reload、[Add missing](テンプレートとnegativeに出てくる未定義の `{名前}` を変数に追加)
 - 検証:名前が空、変数名が不正、変数名の重複はエラーにして Save を押せなくする
 - 未保存の変更があるときに、別のテンプレートを選ぶ・New・Duplicate・モーダルを閉じる(Esc/×/背景クリック)と、本体の確認ダイアログで確認する
 - モーダル:ノードの[Edit]で開き、ノードのテンプレートを最初に表示する。同時に開くのは1つだけ(開いているときに[Edit]を押すと、そのテンプレートに切り替える)
 - サイドバー:`registerSidebarTab({type:'custom'})`。幅が狭いときはコンテナクエリで一覧とフォームを縦に並べる。別のタブに切り替えるとUIは破棄されるので、未保存の状態を `editorSession.ts` に残し、戻ったときに復元する
 - 別の場所(もう一方のエディタ、Reload)で変更されたとき、手元に未保存の変更がなければフォームをその内容に更新する。変更があれば手元を優先し、保存時の409で気づけるようにする
+- 一覧の並びと折り畳み(2026-10-28、ユーザー判断):カテゴリーはカテゴリー名順、中はテンプレート名順(大文字小文字を区別しない `localeCompare`)。カテゴリーなし(Uncategorized)は最後。ノードのプルダウンとエディタの一覧は、どちらもカテゴリーごとに折り畳める。最初は選択中のテンプレートのカテゴリーだけを開き、開閉の状態は覚えない(プルダウンは開くたびに戻す)。検索中は一致するカテゴリーをすべて開く(`logic.ts` の `groupTemplates` / `foldGroups` / `filterGroups`、`foldedGroups.ts`、`GroupToggle.vue`)
 - テンプレートを保存しても、ノードのsnapshotは更新しない(ノードには「snapshot取得後に変更あり」と表示し、次のQueueで更新される)
 
 ## Independent Queue(**実装済み** 2026-09-30。pytest 157件、vitest 91件、Nodes 2.0とLiteGraphで実機確認済み。LLMでの生成も2026-10-01にユーザーが実機で確認済み)
@@ -369,7 +370,8 @@ NF_Tools の `NFPreviewSelector2` をNF_Suiteに統合し、待機方式を部�
 - 選択肢の一覧(PrimeVueのSelect)は `document.body` に出す。一覧を開いたままキャンバスを動かすと、一覧は元の位置に残る
 - 自前モーダルの z-index は 1000。同梱PrimeVueのオーバーレイ(1001〜)と本体のダイアログ(1101〜)がその上に出る。本体の確認ダイアログは `app.extensionManager.dialog.confirm` を使う(`core/comfy.ts` の `confirmDialog`)
 - モーダルとサイドバーは外枠で `keydown` の伝播を止めている。本体のショートカット(windowのkeydownをバブリングで受ける)がグラフに作用しないようにするため
-- PrimeVue Listbox は選択状態を内部にも持ち、`model-value` が変わらないと表示を戻さない。選択を取り消したとき(確認でCancel、選択中の項目の再クリック)は、値をいったん別の値にしてから戻して表示を同期している(`TemplateEditor.vue` の `resyncListSelection`)
+- PrimeVue Listbox は、子のないオプショングループを見出しごと表示しない(`optionsListGroup`)。カテゴリーを折り畳めないので、エディタの一覧は自作の `TemplateList.vue` にした(2026-10-28。以前の Listbox の選択の同期の回避策 `resyncListSelection` も不要になり削除)。ノードのプルダウン(Select)は空のグループも見出しを表示するので、PrimeVue のまま `#optiongroup` スロットで開閉する
+- PrimeVue Select の `show` イベントは、開くアニメーションの後(`onOverlayAfterEnter`)にしか出ず、確実ではない。開いたときの処理は `before-show` で行う
 - `@container` の条件は、`container-type` を付けた要素の子孫にしか効かない。エディタは外側の `.nf-editor-host` をコンテナにしている
 - PrimeVueのunstyledモードで出る要素の属性は推測せず、実際のDOMで確かめてからCSSを書く(例:検索欄は `data-pc-name="pcfiltercontainer"` / `"pcfiltericoncontainer"`)
 - 部分実行(`partial_execution_targets`)の対象になるのは、`OUTPUT_NODE` のノードだけ(`execution.py` の `validate_prompt`)。それ以外を指定すると400(`prompt_no_outputs`)。V3の `has_intermediate_output` は考慮されない

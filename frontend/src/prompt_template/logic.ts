@@ -54,7 +54,9 @@ export interface TemplateGroup {
 
 const UNCATEGORIZED = 'Uncategorized'
 
-/** Group by category (first-seen order); templates without a category go last. */
+const byName = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: 'base' })
+
+/** Group by category; categories and the templates in each are sorted by name, ignoring case. Templates without a category go last. */
 export function groupTemplates(templates: Template[]): TemplateGroup[] {
   const groups = new Map<string, TemplateGroup['items']>()
   for (const t of templates) {
@@ -62,10 +64,37 @@ export function groupTemplates(templates: Template[]): TemplateGroup[] {
     if (!groups.has(key)) groups.set(key, [])
     groups.get(key)!.push({ id: t.id, name: t.name })
   }
-  const result = [...groups].filter(([key]) => key).map(([label, items]) => ({ label, items }))
+  for (const items of groups.values()) items.sort((a, b) => byName(a.name, b.name))
+  const result = [...groups]
+    .filter(([key]) => key)
+    .sort(([a], [b]) => byName(a, b))
+    .map(([label, items]) => ({ label, items }))
   const uncategorized = groups.get('')
   if (uncategorized) result.push({ label: UNCATEGORIZED, items: uncategorized })
   return result
+}
+
+/**
+ * Groups as shown in a foldable list: groups that are not expanded keep their header but no
+ * items. While the user is filtering, every group is shown so that all matches can be found.
+ */
+export function foldGroups(groups: TemplateGroup[], expanded: Set<string>, filtering: boolean): TemplateGroup[] {
+  if (filtering) return groups
+  return groups.map((g) => (expanded.has(g.label) ? g : { ...g, items: [] }))
+}
+
+/** Templates whose name contains `text` (ignoring case); groups left empty are dropped. */
+export function filterGroups(groups: TemplateGroup[], text: string): TemplateGroup[] {
+  const needle = text.trim().toLocaleLowerCase()
+  if (!needle) return groups
+  return groups
+    .map((g) => ({ ...g, items: g.items.filter((item) => item.name.toLocaleLowerCase().includes(needle)) }))
+    .filter((g) => g.items.length)
+}
+
+/** Label of the group that holds template `id`. */
+export function groupOf(groups: TemplateGroup[], id: string | null): string | undefined {
+  return groups.find((g) => g.items.some((item) => item.id === id))?.label
 }
 
 export type ResolveNotice =

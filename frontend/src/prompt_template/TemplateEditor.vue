@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
-import Listbox from 'primevue/listbox'
 import Textarea from 'primevue/textarea'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { ApiError, requestJson } from '@/core/apiClient'
 import { confirmDialog, toast } from '@/core/comfy'
@@ -30,6 +29,7 @@ import {
   updateTemplate
 } from './libraryStore'
 import { groupTemplates } from './logic'
+import TemplateList from './TemplateList.vue'
 import { API_PREFIX, type ExpandResponse, type Template } from './types'
 
 const props = defineProps<{
@@ -69,23 +69,8 @@ async function confirmDiscard(): Promise<boolean> {
   return confirmDialog('Discard changes?', `"${form.value.name}" has unsaved changes. Discard them?`)
 }
 
-/**
- * PrimeVue Listbox keeps its own selection and only re-syncs when model-value changes.
- * When we refuse a selection (cancelled discard, click on the selected item), bounce
- * the bound value so the list highlights the real selection again.
- */
-async function resyncListSelection() {
-  const keep = selectedId.value
-  selectedId.value = '\u0000'
-  await nextTick()
-  selectedId.value = keep
-}
-
 async function select(id: string | null) {
-  if (!id || id === selectedId.value || !(await confirmDiscard())) {
-    await resyncListSelection()
-    return
-  }
+  if (!id || id === selectedId.value || !(await confirmDiscard())) return
   show(findTemplate(id) ?? null)
 }
 
@@ -255,18 +240,7 @@ defineExpose({ confirmDiscard, select })
         <Button class="nf-button nf-grow" icon="pi pi-plus" label="New" @click="startNew" />
         <Button class="nf-icon-button" icon="pi pi-refresh" title="Reload from disk" @click="reload" />
       </div>
-      <Listbox
-        :model-value="selectedId"
-        :options="groups"
-        option-label="name"
-        option-value="id"
-        option-group-label="label"
-        option-group-children="items"
-        filter
-        filter-placeholder="Search"
-        empty-message="No templates"
-        @update:model-value="select"
-      />
+      <TemplateList :groups="groups" :selected-id="selectedId" @select="select" />
     </aside>
 
     <section v-if="form" class="nf-editor-form">
