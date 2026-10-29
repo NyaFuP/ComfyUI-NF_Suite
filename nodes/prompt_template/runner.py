@@ -45,8 +45,8 @@ def validate(lookup, template_id, variables_raw, snapshot_raw, pin_snapshot):
 def fingerprint(lookup, template_id, variables_raw, snapshot_raw, pin_snapshot):
     """Cache key: changes whenever the output could change (including external library edits).
 
-    The connected `text` is not part of it: ComfyUI passes only constants here, and a change
-    upstream already changes the node's cache key.
+    The connected input1 / input2 are not part of it: ComfyUI passes linked inputs here as None,
+    and a change upstream already changes the node's cache key.
     """
     try:
         resolution, variables = _resolve(lookup, template_id, variables_raw, snapshot_raw, pin_snapshot)

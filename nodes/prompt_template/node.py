@@ -46,7 +46,8 @@ class PromptTemplate(io.ComfyNode):
         return runner.validate(lookup_template, template_id, variables, snapshot, pin_snapshot)
 
     @classmethod
-    def fingerprint_inputs(cls, template_id, variables, snapshot, pin_snapshot):
+    def fingerprint_inputs(cls, template_id, variables, snapshot, pin_snapshot, input1=None, input2=None):
+        # ComfyUI passes linked inputs here as None; their changes reach the cache key through the upstream nodes.
         return runner.fingerprint(lookup_template, template_id, variables, snapshot, pin_snapshot)
 
     @classmethod
